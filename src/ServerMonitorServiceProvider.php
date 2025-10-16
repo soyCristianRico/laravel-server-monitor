@@ -2,10 +2,13 @@
 
 namespace CristianDev\LaravelServerMonitor;
 
+use CristianDev\LaravelServerMonitor\Console\Commands\Security\SecurityBackupCrontabsCommand;
 use CristianDev\LaravelServerMonitor\Console\Commands\Security\SecurityCheckCommand;
 use CristianDev\LaravelServerMonitor\Console\Commands\Security\SecurityCheckMalwareCommand;
+use CristianDev\LaravelServerMonitor\Console\Commands\Security\SecurityComprehensiveCheckCommand;
 use CristianDev\LaravelServerMonitor\Console\Commands\Security\SecurityMonitorCrontabsCommand;
 use CristianDev\LaravelServerMonitor\Console\Commands\ServerMonitorCommand;
+use CristianDev\LaravelServerMonitor\Services\Security\SecurityBackupService;
 use CristianDev\LaravelServerMonitor\Services\Security\SecurityNotificationService;
 use CristianDev\LaravelServerMonitor\Services\Security\SecurityScannerService;
 use CristianDev\LaravelServerMonitor\Services\ServerMonitoringService;
@@ -20,6 +23,7 @@ class ServerMonitorServiceProvider extends ServiceProvider
         $this->app->singleton(ServerMonitoringService::class);
         $this->app->singleton(SecurityNotificationService::class);
         $this->app->singleton(SecurityScannerService::class);
+        $this->app->singleton(SecurityBackupService::class);
     }
 
     public function boot(): void
@@ -34,6 +38,8 @@ class ServerMonitorServiceProvider extends ServiceProvider
                 SecurityCheckCommand::class,
                 SecurityCheckMalwareCommand::class,
                 SecurityMonitorCrontabsCommand::class,
+                SecurityBackupCrontabsCommand::class,
+                SecurityComprehensiveCheckCommand::class,
             ]);
         }
 
