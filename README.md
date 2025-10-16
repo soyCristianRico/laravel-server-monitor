@@ -36,7 +36,7 @@ composer require soycristianrico/laravel-server-monitor
 2. Publish the configuration file:
 
 ```bash
-php artisan vendor:publish --provider="CristianDev\LaravelServerMonitor\ServerMonitorServiceProvider" --tag="server-monitor-config"
+php artisan vendor:publish --provider="SoyCristianRico\LaravelServerMonitor\ServerMonitorServiceProvider" --tag="server-monitor-config"
 ```
 
 3. Configure your settings in `config/server-monitor.php`

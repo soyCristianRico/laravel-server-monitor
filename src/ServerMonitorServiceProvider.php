@@ -1,17 +1,17 @@
 <?php
 
-namespace CristianDev\LaravelServerMonitor;
+namespace SoyCristianRico\LaravelServerMonitor;
 
-use CristianDev\LaravelServerMonitor\Console\Commands\Security\SecurityBackupCrontabsCommand;
-use CristianDev\LaravelServerMonitor\Console\Commands\Security\SecurityCheckCommand;
-use CristianDev\LaravelServerMonitor\Console\Commands\Security\SecurityCheckMalwareCommand;
-use CristianDev\LaravelServerMonitor\Console\Commands\Security\SecurityComprehensiveCheckCommand;
-use CristianDev\LaravelServerMonitor\Console\Commands\Security\SecurityMonitorCrontabsCommand;
-use CristianDev\LaravelServerMonitor\Console\Commands\ServerMonitorCommand;
-use CristianDev\LaravelServerMonitor\Services\Security\SecurityBackupService;
-use CristianDev\LaravelServerMonitor\Services\Security\SecurityNotificationService;
-use CristianDev\LaravelServerMonitor\Services\Security\SecurityScannerService;
-use CristianDev\LaravelServerMonitor\Services\ServerMonitoringService;
+use SoyCristianRico\LaravelServerMonitor\Console\Commands\Security\SecurityBackupCrontabsCommand;
+use SoyCristianRico\LaravelServerMonitor\Console\Commands\Security\SecurityCheckCommand;
+use SoyCristianRico\LaravelServerMonitor\Console\Commands\Security\SecurityCheckMalwareCommand;
+use SoyCristianRico\LaravelServerMonitor\Console\Commands\Security\SecurityComprehensiveCheckCommand;
+use SoyCristianRico\LaravelServerMonitor\Console\Commands\Security\SecurityMonitorCrontabsCommand;
+use SoyCristianRico\LaravelServerMonitor\Console\Commands\ServerMonitorCommand;
+use SoyCristianRico\LaravelServerMonitor\Services\Security\SecurityBackupService;
+use SoyCristianRico\LaravelServerMonitor\Services\Security\SecurityNotificationService;
+use SoyCristianRico\LaravelServerMonitor\Services\Security\SecurityScannerService;
+use SoyCristianRico\LaravelServerMonitor\Services\ServerMonitoringService;
 use Illuminate\Support\ServiceProvider;
 
 class ServerMonitorServiceProvider extends ServiceProvider

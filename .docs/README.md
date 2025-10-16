@@ -75,7 +75,7 @@ Comprehensive documentation for the Laravel Server Monitor package.
 composer require soycristianrico/laravel-server-monitor
 
 # Publish config
-php artisan vendor:publish --provider="CristianDev\LaravelServerMonitor\ServerMonitorServiceProvider"
+php artisan vendor:publish --provider="SoyCristianRico\LaravelServerMonitor\ServerMonitorServiceProvider"
 
 # Test monitoring
 php artisan server:monitor

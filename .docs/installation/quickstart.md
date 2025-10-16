@@ -13,7 +13,7 @@ composer require soycristianrico/laravel-server-monitor
 ### 2. Publish Configuration (1 minute)
 
 ```bash
-php artisan vendor:publish --provider="CristianDev\LaravelServerMonitor\ServerMonitorServiceProvider"
+php artisan vendor:publish --provider="SoyCristianRico\LaravelServerMonitor\ServerMonitorServiceProvider"
 ```
 
 ### 3. Setup Admin User (1 minute)

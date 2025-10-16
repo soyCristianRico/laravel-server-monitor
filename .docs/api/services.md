@@ -6,7 +6,7 @@ Complete API documentation for Laravel Server Monitor services.
 
 Main service for server resource monitoring.
 
-### Class: `CristianDev\LaravelServerMonitor\Services\ServerMonitoringService`
+### Class: `SoyCristianRico\LaravelServerMonitor\Services\ServerMonitoringService`
 
 #### Public Methods
 
@@ -152,7 +152,7 @@ Returns CPU critical threshold from configuration.
 
 Service for security monitoring and threat detection.
 
-### Class: `CristianDev\LaravelServerMonitor\Services\Security\SecurityScannerService`
+### Class: `SoyCristianRico\LaravelServerMonitor\Services\Security\SecurityScannerService`
 
 #### Public Methods
 
@@ -325,7 +325,7 @@ Raw netstat output of listening ports (excluding localhost).
 
 Service for sending security alerts and notifications.
 
-### Class: `CristianDev\LaravelServerMonitor\Services\Security\SecurityNotificationService`
+### Class: `SoyCristianRico\LaravelServerMonitor\Services\Security\SecurityNotificationService`
 
 #### Public Methods
 
@@ -382,8 +382,8 @@ Logs security alerts to Laravel log system.
 ### Custom Monitoring Dashboard
 
 ```php
-use CristianDev\LaravelServerMonitor\Services\ServerMonitoringService;
-use CristianDev\LaravelServerMonitor\Services\Security\SecurityScannerService;
+use SoyCristianRico\LaravelServerMonitor\Services\ServerMonitoringService;
+use SoyCristianRico\LaravelServerMonitor\Services\Security\SecurityScannerService;
 
 class MonitoringController extends Controller
 {
@@ -406,7 +406,7 @@ class MonitoringController extends Controller
 ### Custom Alert Logic
 
 ```php
-use CristianDev\LaravelServerMonitor\Services\ServerMonitoringService;
+use SoyCristianRico\LaravelServerMonitor\Services\ServerMonitoringService;
 
 class CustomMonitoringService
 {
@@ -438,7 +438,7 @@ class CustomMonitoringService
 ### Extending Services
 
 ```php
-use CristianDev\LaravelServerMonitor\Services\Security\SecurityScannerService;
+use SoyCristianRico\LaravelServerMonitor\Services\Security\SecurityScannerService;
 
 class ExtendedSecurityScanner extends SecurityScannerService
 {

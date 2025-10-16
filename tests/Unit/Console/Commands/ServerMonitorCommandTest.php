@@ -1,7 +1,7 @@
 <?php
 
-use CristianDev\LaravelServerMonitor\Console\Commands\ServerMonitorCommand;
-use CristianDev\LaravelServerMonitor\Services\ServerMonitoringService;
+use SoyCristianRico\LaravelServerMonitor\Console\Commands\ServerMonitorCommand;
+use SoyCristianRico\LaravelServerMonitor\Services\ServerMonitoringService;
 
 describe('ServerMonitorCommand', function () {
     beforeEach(function () {
@@ -248,7 +248,7 @@ describe('ServerMonitorCommand', function () {
         it('uses NotifiesSecurityAlerts trait', function () {
             $traits = class_uses(ServerMonitorCommand::class);
 
-            expect($traits)->toContain('CristianDev\LaravelServerMonitor\Traits\NotifiesSecurityAlerts');
+            expect($traits)->toContain('SoyCristianRico\LaravelServerMonitor\Traits\NotifiesSecurityAlerts');
         });
     });
 });

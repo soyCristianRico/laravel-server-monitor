@@ -34,7 +34,7 @@ php artisan migrate
 ### 3. Publish Configuration
 
 ```bash
-php artisan vendor:publish --provider="CristianDev\LaravelServerMonitor\ServerMonitorServiceProvider"
+php artisan vendor:publish --provider="SoyCristianRico\LaravelServerMonitor\ServerMonitorServiceProvider"
 ```
 
 ### 4. Configure Environment Variables
@@ -276,7 +276,7 @@ You can check monitoring status programmatically:
 
 ```php
 // In a controller or command
-use CristianDev\LaravelServerMonitor\Services\ServerMonitoringService;
+use SoyCristianRico\LaravelServerMonitor\Services\ServerMonitoringService;
 
 $monitor = app(ServerMonitoringService::class);
 $checks = $monitor->runAllChecks();

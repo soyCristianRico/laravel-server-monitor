@@ -1,9 +1,9 @@
 <?php
 
-namespace CristianDev\LaravelServerMonitor\Console\Commands;
+namespace SoyCristianRico\LaravelServerMonitor\Console\Commands;
 
-use CristianDev\LaravelServerMonitor\Services\ServerMonitoringService;
-use CristianDev\LaravelServerMonitor\Traits\NotifiesSecurityAlerts;
+use SoyCristianRico\LaravelServerMonitor\Services\ServerMonitoringService;
+use SoyCristianRico\LaravelServerMonitor\Traits\NotifiesSecurityAlerts;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 

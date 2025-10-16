@@ -2,7 +2,7 @@
 
 namespace Tests;
 
-use CristianDev\LaravelServerMonitor\ServerMonitorServiceProvider;
+use SoyCristianRico\LaravelServerMonitor\ServerMonitorServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
 use Spatie\Permission\PermissionServiceProvider;
 

@@ -1,6 +1,6 @@
 <?php
 
-use CristianDev\LaravelServerMonitor\Services\Security\SecurityBackupService;
+use SoyCristianRico\LaravelServerMonitor\Services\Security\SecurityBackupService;
 
 describe('SecurityBackupService', function () {
     describe('backupCrontabs', function () {

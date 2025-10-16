@@ -1,8 +1,8 @@
 <?php
 
-namespace CristianDev\LaravelServerMonitor\Services\Security;
+namespace SoyCristianRico\LaravelServerMonitor\Services\Security;
 
-use CristianDev\LaravelServerMonitor\Notifications\SecurityAlertNotification;
+use SoyCristianRico\LaravelServerMonitor\Notifications\SecurityAlertNotification;
 use Illuminate\Support\Facades\Log;
 
 class SecurityNotificationService

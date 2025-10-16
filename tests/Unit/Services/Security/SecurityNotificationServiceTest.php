@@ -1,6 +1,6 @@
 <?php
 
-use CristianDev\LaravelServerMonitor\Services\Security\SecurityNotificationService;
+use SoyCristianRico\LaravelServerMonitor\Services\Security\SecurityNotificationService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 

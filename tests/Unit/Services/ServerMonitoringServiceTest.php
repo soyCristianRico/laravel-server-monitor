@@ -1,6 +1,6 @@
 <?php
 
-use CristianDev\LaravelServerMonitor\Services\ServerMonitoringService;
+use SoyCristianRico\LaravelServerMonitor\Services\ServerMonitoringService;
 
 describe('ServerMonitoringService', function () {
     describe('threshold configuration', function () {

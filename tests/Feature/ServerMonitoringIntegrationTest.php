@@ -1,8 +1,8 @@
 <?php
 
-use CristianDev\LaravelServerMonitor\Services\ServerMonitoringService;
-use CristianDev\LaravelServerMonitor\Services\Security\SecurityNotificationService;
-use CristianDev\LaravelServerMonitor\Services\Security\SecurityScannerService;
+use SoyCristianRico\LaravelServerMonitor\Services\ServerMonitoringService;
+use SoyCristianRico\LaravelServerMonitor\Services\Security\SecurityNotificationService;
+use SoyCristianRico\LaravelServerMonitor\Services\Security\SecurityScannerService;
 
 describe('Server Monitoring Integration', function () {
     beforeEach(function () {

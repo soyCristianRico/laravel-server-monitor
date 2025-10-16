@@ -34,7 +34,7 @@ php artisan migrate
 ### 3. Publish Package Configuration
 
 ```bash
-php artisan vendor:publish --provider="CristianDev\LaravelServerMonitor\ServerMonitorServiceProvider" --tag="server-monitor-config"
+php artisan vendor:publish --provider="SoyCristianRico\LaravelServerMonitor\ServerMonitorServiceProvider" --tag="server-monitor-config"
 ```
 
 This creates `config/server-monitor.php` with default settings.

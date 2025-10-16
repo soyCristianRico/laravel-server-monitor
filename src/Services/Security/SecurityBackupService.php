@@ -1,6 +1,6 @@
 <?php
 
-namespace CristianDev\LaravelServerMonitor\Services\Security;
+namespace SoyCristianRico\LaravelServerMonitor\Services\Security;
 
 use Illuminate\Support\Facades\Log;
 

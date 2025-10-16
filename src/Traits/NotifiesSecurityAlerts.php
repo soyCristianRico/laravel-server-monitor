@@ -1,8 +1,8 @@
 <?php
 
-namespace CristianDev\LaravelServerMonitor\Traits;
+namespace SoyCristianRico\LaravelServerMonitor\Traits;
 
-use CristianDev\LaravelServerMonitor\Services\Security\SecurityNotificationService;
+use SoyCristianRico\LaravelServerMonitor\Services\Security\SecurityNotificationService;
 
 trait NotifiesSecurityAlerts
 {

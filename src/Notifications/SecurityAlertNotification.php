@@ -1,6 +1,6 @@
 <?php
 
-namespace CristianDev\LaravelServerMonitor\Notifications;
+namespace SoyCristianRico\LaravelServerMonitor\Notifications;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;

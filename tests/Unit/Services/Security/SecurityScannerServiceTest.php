@@ -1,6 +1,6 @@
 <?php
 
-use CristianDev\LaravelServerMonitor\Services\Security\SecurityScannerService;
+use SoyCristianRico\LaravelServerMonitor\Services\Security\SecurityScannerService;
 
 describe('SecurityScannerService', function () {
     beforeEach(function () {

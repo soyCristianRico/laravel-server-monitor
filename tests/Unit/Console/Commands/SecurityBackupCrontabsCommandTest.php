@@ -1,7 +1,7 @@
 <?php
 
-use CristianDev\LaravelServerMonitor\Console\Commands\Security\SecurityBackupCrontabsCommand;
-use CristianDev\LaravelServerMonitor\Services\Security\SecurityBackupService;
+use SoyCristianRico\LaravelServerMonitor\Console\Commands\Security\SecurityBackupCrontabsCommand;
+use SoyCristianRico\LaravelServerMonitor\Services\Security\SecurityBackupService;
 
 describe('SecurityBackupCrontabsCommand', function () {
 

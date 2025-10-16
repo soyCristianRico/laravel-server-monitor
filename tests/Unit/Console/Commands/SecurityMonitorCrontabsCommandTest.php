@@ -1,8 +1,8 @@
 <?php
 
-use CristianDev\LaravelServerMonitor\Console\Commands\Security\SecurityMonitorCrontabsCommand;
-use CristianDev\LaravelServerMonitor\Services\Security\SecurityScannerService;
-use CristianDev\LaravelServerMonitor\Traits\NotifiesSecurityAlerts;
+use SoyCristianRico\LaravelServerMonitor\Console\Commands\Security\SecurityMonitorCrontabsCommand;
+use SoyCristianRico\LaravelServerMonitor\Services\Security\SecurityScannerService;
+use SoyCristianRico\LaravelServerMonitor\Traits\NotifiesSecurityAlerts;
 use Illuminate\Support\Facades\Notification;
 
 describe('SecurityMonitorCrontabsCommand', function () {

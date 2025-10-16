@@ -232,7 +232,7 @@ Schedule::call(function () {
 
 ```php
 // In your own command
-use CristianDev\LaravelServerMonitor\Services\ServerMonitoringService;
+use SoyCristianRico\LaravelServerMonitor\Services\ServerMonitoringService;
 
 public function handle()
 {

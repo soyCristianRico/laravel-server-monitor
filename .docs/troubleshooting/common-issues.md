@@ -48,7 +48,7 @@ Manually register in `config/app.php`:
 ```php
 'providers' => [
     // Other providers...
-    CristianDev\LaravelServerMonitor\ServerMonitorServiceProvider::class,
+    SoyCristianRico\LaravelServerMonitor\ServerMonitorServiceProvider::class,
 ],
 ```
 
@@ -94,7 +94,7 @@ Mail::raw('Test email', function($message) {
 4. **Check notification service:**
 ```php
 // In tinker
-$service = app(\CristianDev\LaravelServerMonitor\Services\Security\SecurityNotificationService::class);
+$service = app(\SoyCristianRico\LaravelServerMonitor\Services\Security\SecurityNotificationService::class);
 $service->sendAlerts([['type' => 'Test', 'details' => 'Test alert']]);
 ```
 
@@ -182,7 +182,7 @@ Customize disk checking in your own service extension:
 
 ```php
 // Create app/Services/CustomServerMonitoringService.php
-use CristianDev\LaravelServerMonitor\Services\ServerMonitoringService;
+use SoyCristianRico\LaravelServerMonitor\Services\ServerMonitoringService;
 
 class CustomServerMonitoringService extends ServerMonitoringService
 {

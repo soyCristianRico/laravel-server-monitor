@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a Laravel package (`cristian-dev/laravel-server-monitor`) that provides server monitoring and security scanning capabilities. The package monitors server resources (CPU, memory, disk) and performs security checks including malware detection, suspicious process monitoring, and system file change tracking.
 
-**Namespace:** `CristianDev\LaravelServerMonitor`
+**Namespace:** `SoyCristianRico\LaravelServerMonitor`
 
 ## Development Commands
 

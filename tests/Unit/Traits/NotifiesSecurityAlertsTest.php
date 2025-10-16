@@ -1,7 +1,7 @@
 <?php
 
-use CristianDev\LaravelServerMonitor\Services\Security\SecurityNotificationService;
-use CristianDev\LaravelServerMonitor\Traits\NotifiesSecurityAlerts;
+use SoyCristianRico\LaravelServerMonitor\Services\Security\SecurityNotificationService;
+use SoyCristianRico\LaravelServerMonitor\Traits\NotifiesSecurityAlerts;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Notification;
 use Spatie\Permission\Models\Role;

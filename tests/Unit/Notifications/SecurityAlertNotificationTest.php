@@ -1,6 +1,6 @@
 <?php
 
-use CristianDev\LaravelServerMonitor\Notifications\SecurityAlertNotification;
+use SoyCristianRico\LaravelServerMonitor\Notifications\SecurityAlertNotification;
 use Illuminate\Notifications\Messages\MailMessage;
 use Tests\Fixtures\User;
 

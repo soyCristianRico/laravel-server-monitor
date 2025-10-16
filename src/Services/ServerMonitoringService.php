@@ -1,6 +1,6 @@
 <?php
 
-namespace CristianDev\LaravelServerMonitor\Services;
+namespace SoyCristianRico\LaravelServerMonitor\Services;
 
 class ServerMonitoringService
 {

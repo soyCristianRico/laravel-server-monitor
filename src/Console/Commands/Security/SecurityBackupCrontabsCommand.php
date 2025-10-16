@@ -1,8 +1,8 @@
 <?php
 
-namespace CristianDev\LaravelServerMonitor\Console\Commands\Security;
+namespace SoyCristianRico\LaravelServerMonitor\Console\Commands\Security;
 
-use CristianDev\LaravelServerMonitor\Services\Security\SecurityBackupService;
+use SoyCristianRico\LaravelServerMonitor\Services\Security\SecurityBackupService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 

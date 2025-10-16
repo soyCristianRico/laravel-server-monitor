@@ -25,7 +25,7 @@
     },
     "autoload": {
         "psr-4": {
-            "CristianDev\\LaravelServerMonitor\\": "src/"
+            "SoyCristianRico\\LaravelServerMonitor\\": "src/"
         }
     },
     "autoload-dev": {
@@ -36,7 +36,7 @@
     "extra": {
         "laravel": {
             "providers": [
-                "CristianDev\\LaravelServerMonitor\\ServerMonitorServiceProvider"
+                "SoyCristianRico\\LaravelServerMonitor\\ServerMonitorServiceProvider"
             ]
         }
     },
