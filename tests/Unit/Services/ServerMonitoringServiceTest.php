@@ -39,6 +39,25 @@ describe('ServerMonitoringService', function () {
             expect($service->getCpuWarningThreshold())->toBe(60);
             expect($service->getCpuCriticalThreshold())->toBe(80);
         });
+
+        it('returns correct swap thresholds from config', function () {
+            config([
+                'server-monitor.monitoring.swap.warning_threshold' => 25,
+                'server-monitor.monitoring.swap.critical_threshold' => 60
+            ]);
+
+            $service = app(ServerMonitoringService::class);
+            expect($service->getSwapWarningThreshold())->toBe(25);
+            expect($service->getSwapCriticalThreshold())->toBe(60);
+        });
+
+        it('returns default swap thresholds when config is missing', function () {
+            config(['server-monitor.monitoring.swap' => null]);
+
+            $service = app(ServerMonitoringService::class);
+            expect($service->getSwapWarningThreshold())->toBe(20);
+            expect($service->getSwapCriticalThreshold())->toBe(50);
+        });
     });
 
     describe('disk space monitoring', function () {
@@ -147,6 +166,65 @@ describe('ServerMonitoringService', function () {
         });
     });
 
+    describe('swap usage monitoring', function () {
+        it('returns ok status when swap usage is below warning threshold', function () {
+            $service = Mockery::mock(ServerMonitoringService::class)->makePartial()
+                ->shouldAllowMockingProtectedMethods();
+            $service->shouldReceive('getSwapUsage')->andReturn(10);
+            $service->shouldReceive('getSwapWarningThreshold')->andReturn(20);
+            $service->shouldReceive('getSwapCriticalThreshold')->andReturn(50);
+
+            $result = $service->checkSwapUsage();
+
+            expect($result)->toMatchArray([
+                'metric' => 'swap_usage',
+                'value' => 10,
+                'unit' => '%',
+                'status' => 'ok',
+                'message' => 'Swap usage is 10%'
+            ]);
+        });
+
+        it('returns warning status when swap usage exceeds warning threshold', function () {
+            $service = Mockery::mock(ServerMonitoringService::class)->makePartial()
+                ->shouldAllowMockingProtectedMethods();
+            $service->shouldReceive('getSwapUsage')->andReturn(30);
+            $service->shouldReceive('getSwapWarningThreshold')->andReturn(20);
+            $service->shouldReceive('getSwapCriticalThreshold')->andReturn(50);
+
+            $result = $service->checkSwapUsage();
+
+            expect($result['status'])->toBe('warning');
+            expect($result['value'])->toBe(30);
+        });
+
+        it('returns critical status when swap usage exceeds critical threshold', function () {
+            $service = Mockery::mock(ServerMonitoringService::class)->makePartial()
+                ->shouldAllowMockingProtectedMethods();
+            $service->shouldReceive('getSwapUsage')->andReturn(60);
+            $service->shouldReceive('getSwapWarningThreshold')->andReturn(20);
+            $service->shouldReceive('getSwapCriticalThreshold')->andReturn(50);
+
+            $result = $service->checkSwapUsage();
+
+            expect($result['status'])->toBe('critical');
+            expect($result['value'])->toBe(60);
+        });
+
+        it('returns ok status when no swap is configured', function () {
+            $service = Mockery::mock(ServerMonitoringService::class)->makePartial()
+                ->shouldAllowMockingProtectedMethods();
+            $service->shouldReceive('getSwapUsage')->andReturn(0);
+            $service->shouldReceive('getSwapWarningThreshold')->andReturn(20);
+            $service->shouldReceive('getSwapCriticalThreshold')->andReturn(50);
+
+            $result = $service->checkSwapUsage();
+
+            expect($result['status'])->toBe('ok');
+            expect($result['value'])->toBe(0);
+        });
+    });
+
     describe('mysql service monitoring', function () {
         it('returns ok status when mysql is running', function () {
             $service = Mockery::mock(ServerMonitoringService::class)->makePartial()
@@ -187,6 +265,7 @@ describe('ServerMonitoringService', function () {
                 'disk' => ['status' => 'ok', 'message' => 'Disk OK'],
                 'memory' => ['status' => 'ok', 'message' => 'Memory OK'],
                 'cpu' => ['status' => 'ok', 'message' => 'CPU OK'],
+                'swap' => ['status' => 'ok', 'message' => 'Swap OK'],
                 'mysql' => ['status' => 'ok', 'message' => 'MySQL OK'],
             ];
 
@@ -272,11 +351,12 @@ describe('ServerMonitoringService', function () {
             $service->shouldReceive('checkDiskSpace')->andReturn(['status' => 'ok']);
             $service->shouldReceive('checkMemoryUsage')->andReturn(['status' => 'ok']);
             $service->shouldReceive('checkCpuLoad')->andReturn(['status' => 'ok']);
+            $service->shouldReceive('checkSwapUsage')->andReturn(['status' => 'ok']);
             $service->shouldReceive('checkMysqlService')->andReturn(['status' => 'ok']);
 
             $checks = $service->runAllChecks();
 
-            expect($checks)->toHaveKeys(['disk', 'memory', 'cpu', 'mysql']);
+            expect($checks)->toHaveKeys(['disk', 'memory', 'cpu', 'swap', 'mysql']);
         });
     });
 });

@@ -42,6 +42,20 @@ return [
             'warning_threshold' => env('SERVER_MONITOR_CPU_WARNING', 70),
             'critical_threshold' => env('SERVER_MONITOR_CPU_CRITICAL', 90),
         ],
+
+        /*
+        |--------------------------------------------------------------------------
+        | Swap Usage Monitoring
+        |--------------------------------------------------------------------------
+        |
+        | Swap usage thresholds as percentages (0-100).
+        | Any swap usage indicates memory pressure and potential performance issues.
+        |
+        */
+        'swap' => [
+            'warning_threshold' => env('SERVER_MONITOR_SWAP_WARNING', 20),
+            'critical_threshold' => env('SERVER_MONITOR_SWAP_CRITICAL', 50),
+        ],
     ],
 
     /*

@@ -34,12 +34,23 @@ class ServerMonitoringService
         return config('server-monitor.monitoring.cpu.critical_threshold', 90);
     }
 
+    public function getSwapWarningThreshold(): int
+    {
+        return config('server-monitor.monitoring.swap.warning_threshold', 20);
+    }
+
+    public function getSwapCriticalThreshold(): int
+    {
+        return config('server-monitor.monitoring.swap.critical_threshold', 50);
+    }
+
     public function runAllChecks(): array
     {
         return [
             'disk' => $this->checkDiskSpace(),
             'memory' => $this->checkMemoryUsage(),
             'cpu' => $this->checkCpuLoad(),
+            'swap' => $this->checkSwapUsage(),
             'mysql' => $this->checkMysqlService(),
         ];
     }
@@ -80,6 +91,19 @@ class ServerMonitoringService
             'unit' => '',
             'status' => $this->getCpuStatus($load),
             'message' => "CPU load is {$load}",
+        ];
+    }
+
+    public function checkSwapUsage(): array
+    {
+        $usage = $this->getSwapUsage();
+
+        return [
+            'metric' => 'swap_usage',
+            'value' => $usage,
+            'unit' => '%',
+            'status' => $this->getSwapStatus($usage),
+            'message' => "Swap usage is {$usage}%",
         ];
     }
 
@@ -161,6 +185,13 @@ class ServerMonitoringService
         return (float) trim($output);
     }
 
+    protected function getSwapUsage(): int
+    {
+        $output = shell_exec('free | grep Swap | awk "{ if(\$2 == 0) print 0; else printf(\"%.0f\", \$3/\$2 * 100.0) }"');
+
+        return (int) trim($output);
+    }
+
     protected function getMysqlStatus(): bool
     {
         $output = shell_exec('pgrep mysqld');
@@ -198,6 +229,18 @@ class ServerMonitoringService
             return 'critical';
         }
         if ($load >= $this->getCpuWarningThreshold()) {
+            return 'warning';
+        }
+
+        return 'ok';
+    }
+
+    protected function getSwapStatus(int $usage): string
+    {
+        if ($usage >= $this->getSwapCriticalThreshold()) {
+            return 'critical';
+        }
+        if ($usage >= $this->getSwapWarningThreshold()) {
             return 'warning';
         }
 
