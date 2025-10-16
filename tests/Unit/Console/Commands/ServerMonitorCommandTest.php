@@ -5,17 +5,27 @@ use CristianDev\LaravelServerMonitor\Services\ServerMonitoringService;
 
 describe('ServerMonitorCommand', function () {
     beforeEach(function () {
-        $this->service = Mockery::mock(ServerMonitoringService::class);
-        $this->command = new ServerMonitorCommand($this->service);
+        // Mock the ServerMonitoringService in the container
+        $mockService = Mockery::mock(ServerMonitoringService::class);
+        $mockService->shouldReceive('runAllChecks')->andReturn([])->byDefault();
+        $mockService->shouldReceive('getAlerts')->andReturn([])->byDefault();
+
+        $this->app->instance(ServerMonitoringService::class, $mockService);
     });
 
     describe('command configuration', function () {
         it('has correct signature', function () {
-            expect($this->command->getName())->toBe('server:monitor');
+            $service = Mockery::mock(ServerMonitoringService::class);
+            $command = new ServerMonitorCommand($service);
+
+            expect($command->getName())->toBe('server:monitor');
         });
 
         it('has correct description', function () {
-            expect($this->command->getDescription())->toBe('Monitor server resources (CPU, memory, disk space, MySQL)');
+            $service = Mockery::mock(ServerMonitoringService::class);
+            $command = new ServerMonitorCommand($service);
+
+            expect($command->getDescription())->toBe('Monitor server resources (CPU, memory, disk space, MySQL)');
         });
     });
 
@@ -28,10 +38,13 @@ describe('ServerMonitorCommand', function () {
                 'mysql' => ['status' => 'ok', 'message' => 'MySQL OK'],
             ];
 
-            $this->service->shouldReceive('runAllChecks')->once()->andReturn($checks);
-            $this->service->shouldReceive('getAlerts')->once()->with($checks)->andReturn([]);
+            $service = Mockery::mock(ServerMonitoringService::class);
+            $service->shouldReceive('runAllChecks')->once()->andReturn($checks);
+            $service->shouldReceive('getAlerts')->once()->with($checks)->andReturn([]);
 
-            $exitCode = $this->artisan('server:monitor')->assertExitCode(0);
+            $this->app->instance(ServerMonitoringService::class, $service);
+
+            $this->artisan('server:monitor')->assertExitCode(0);
         });
 
         it('displays success message when all checks pass', function () {
@@ -42,8 +55,11 @@ describe('ServerMonitorCommand', function () {
                 'mysql' => ['status' => 'ok', 'message' => 'MySQL service is running'],
             ];
 
-            $this->service->shouldReceive('runAllChecks')->once()->andReturn($checks);
-            $this->service->shouldReceive('getAlerts')->once()->andReturn([]);
+            $service = Mockery::mock(ServerMonitoringService::class);
+            $service->shouldReceive('runAllChecks')->once()->andReturn($checks);
+            $service->shouldReceive('getAlerts')->once()->andReturn([]);
+
+            $this->app->instance(ServerMonitoringService::class, $service);
 
             $this->artisan('server:monitor')
                 ->expectsOutput('Starting server monitoring...')
@@ -74,8 +90,13 @@ describe('ServerMonitorCommand', function () {
                 ]
             ];
 
-            $this->service->shouldReceive('runAllChecks')->once()->andReturn($checks);
-            $this->service->shouldReceive('getAlerts')->once()->with($checks)->andReturn($alerts);
+            $service = Mockery::mock(ServerMonitoringService::class);
+            $service->shouldReceive('runAllChecks')->once()->andReturn($checks);
+            $service->shouldReceive('getAlerts')->once()->with($checks)->andReturn($alerts);
+
+            // Force the container to forget the singleton and use our mock
+            $this->app->forgetInstance(ServerMonitoringService::class);
+            $this->app->instance(ServerMonitoringService::class, $service);
 
             $this->artisan('server:monitor')->assertExitCode(1);
         });
@@ -103,8 +124,13 @@ describe('ServerMonitorCommand', function () {
                 ]
             ];
 
-            $this->service->shouldReceive('runAllChecks')->once()->andReturn($checks);
-            $this->service->shouldReceive('getAlerts')->once()->andReturn($alerts);
+            $service = Mockery::mock(ServerMonitoringService::class);
+            $service->shouldReceive('runAllChecks')->once()->andReturn($checks);
+            $service->shouldReceive('getAlerts')->once()->andReturn($alerts);
+
+            // Force the container to forget the singleton and use our mock
+            $this->app->forgetInstance(ServerMonitoringService::class);
+            $this->app->instance(ServerMonitoringService::class, $service);
 
             $this->artisan('server:monitor')
                 ->expectsOutput('Starting server monitoring...')
@@ -114,7 +140,6 @@ describe('ServerMonitorCommand', function () {
 
     describe('alert notification', function () {
         it('sends alerts when issues are detected', function () {
-            // We'll test this indirectly through the command behavior
             $checks = [
                 'mysql' => ['status' => 'critical', 'message' => 'MySQL service is not running'],
             ];
@@ -128,8 +153,13 @@ describe('ServerMonitorCommand', function () {
                 ]
             ];
 
-            $this->service->shouldReceive('runAllChecks')->once()->andReturn($checks);
-            $this->service->shouldReceive('getAlerts')->once()->andReturn($alerts);
+            $service = Mockery::mock(ServerMonitoringService::class);
+            $service->shouldReceive('runAllChecks')->once()->andReturn($checks);
+            $service->shouldReceive('getAlerts')->once()->andReturn($alerts);
+
+            // Force the container to forget the singleton and use our mock
+            $this->app->forgetInstance(ServerMonitoringService::class);
+            $this->app->instance(ServerMonitoringService::class, $service);
 
             $this->artisan('server:monitor')->assertExitCode(1);
         });
@@ -188,8 +218,13 @@ describe('ServerMonitorCommand', function () {
 
     describe('service integration', function () {
         it('calls monitoring service correctly', function () {
-            $this->service->shouldReceive('runAllChecks')->once()->andReturn([]);
-            $this->service->shouldReceive('getAlerts')->once()->andReturn([]);
+            $service = Mockery::mock(ServerMonitoringService::class);
+            $service->shouldReceive('runAllChecks')->once()->andReturn([]);
+            $service->shouldReceive('getAlerts')->once()->andReturn([]);
+
+            // Force the container to forget the singleton and use our mock
+            $this->app->forgetInstance(ServerMonitoringService::class);
+            $this->app->instance(ServerMonitoringService::class, $service);
 
             $this->artisan('server:monitor');
         });
@@ -197,8 +232,13 @@ describe('ServerMonitorCommand', function () {
         it('passes check results to alert generation', function () {
             $checks = ['test' => 'data'];
 
-            $this->service->shouldReceive('runAllChecks')->once()->andReturn($checks);
-            $this->service->shouldReceive('getAlerts')->once()->with($checks)->andReturn([]);
+            $service = Mockery::mock(ServerMonitoringService::class);
+            $service->shouldReceive('runAllChecks')->once()->andReturn($checks);
+            $service->shouldReceive('getAlerts')->once()->with($checks)->andReturn([]);
+
+            // Force the container to forget the singleton and use our mock
+            $this->app->forgetInstance(ServerMonitoringService::class);
+            $this->app->instance(ServerMonitoringService::class, $service);
 
             $this->artisan('server:monitor');
         });

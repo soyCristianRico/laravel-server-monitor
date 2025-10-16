@@ -1,12 +1,19 @@
 <?php
 
 use CristianDev\LaravelServerMonitor\Console\Commands\Security\SecurityMonitorCrontabsCommand;
+use CristianDev\LaravelServerMonitor\Services\Security\SecurityScannerService;
 use CristianDev\LaravelServerMonitor\Traits\NotifiesSecurityAlerts;
 use Illuminate\Support\Facades\Notification;
 
 describe('SecurityMonitorCrontabsCommand', function () {
     beforeEach(function () {
         Notification::fake();
+
+        // Always mock the SecurityScannerService to prevent slow system calls
+        $mockScanner = Mockery::mock(SecurityScannerService::class);
+        $mockScanner->shouldReceive('checkCrontabModifications')->andReturn(null)->byDefault();
+
+        app()->instance(SecurityScannerService::class, $mockScanner);
     });
 
     it('runs successfully', function () {
@@ -15,69 +22,66 @@ describe('SecurityMonitorCrontabsCommand', function () {
     });
 
     it('uses the NotifiesSecurityAlerts trait', function () {
-        $command = new SecurityMonitorCrontabsCommand();
-
-        expect(class_uses($command))->toContain(NotifiesSecurityAlerts::class);
+        expect(class_uses(SecurityMonitorCrontabsCommand::class))->toContain(NotifiesSecurityAlerts::class);
     });
 
-    it('creates marker file if not exists', function () {
-        // Remove marker file if exists to test initial creation
-        $markerFile = '/tmp/cron-check';
-        if (file_exists($markerFile)) {
-            unlink($markerFile);
-        }
+    it('detects crontab modifications when they exist', function () {
+        // Override the default mock to return an alert
+        $mockScanner = Mockery::mock(SecurityScannerService::class);
+        $mockScanner->shouldReceive('checkCrontabModifications')->andReturn([
+            'type' => 'Recently Modified Crontabs',
+            'details' => '/etc/crontab modified recently'
+        ]);
 
-        // Command should create marker file and exit
+        app()->instance(SecurityScannerService::class, $mockScanner);
+
         $this->artisan('security:monitor-crontabs')
-            ->assertExitCode(0);
+            ->expectsOutput('Monitoring crontab modifications...')
+            ->expectsOutput('Recent crontab modifications detected!')
+            ->assertExitCode(1); // Should return 1 when alerts found
+    });
 
-        // Marker file should now exist
-        expect(file_exists($markerFile))->toBeTrue();
+    it('reports success when no modifications found', function () {
+        $this->artisan('security:monitor-crontabs')
+            ->expectsOutput('Monitoring crontab modifications...')
+            ->expectsOutput('✅ No recent crontab modifications detected')
+            ->assertExitCode(0);
     });
 
     it('command class exists and is properly configured', function () {
         expect(class_exists(SecurityMonitorCrontabsCommand::class))->toBeTrue();
 
-        $command = new SecurityMonitorCrontabsCommand();
-        expect($command->getName())->toBe('security:monitor-crontabs');
+        // Test command signature through reflection instead of instantiation
+        $reflection = new ReflectionClass(SecurityMonitorCrontabsCommand::class);
+        $signatureProperty = $reflection->getProperty('signature');
+        $signatureProperty->setAccessible(true);
+
+        $command = $reflection->newInstanceWithoutConstructor();
+        expect($signatureProperty->getValue($command))->toBe('security:monitor-crontabs');
     });
 
-    it('handles file system operations safely', function () {
-        // Test that command doesn't break with file system operations
+    it('handles scanner service responses gracefully', function () {
+        // Test that command doesn't break with different scanner responses
+        $mockScanner = Mockery::mock(SecurityScannerService::class);
+        $mockScanner->shouldReceive('checkCrontabModifications')->andReturn(null);
+
+        app()->instance(SecurityScannerService::class, $mockScanner);
+
         $this->artisan('security:monitor-crontabs')
             ->assertExitCode(0);
     });
 
-    it('updates marker file timestamp on each run', function () {
-        $markerFile = '/tmp/cron-check';
+    it('sends security alerts when modifications detected', function () {
+        // Override mock to return alerts
+        $mockScanner = Mockery::mock(SecurityScannerService::class);
+        $mockScanner->shouldReceive('checkCrontabModifications')->andReturn([
+            'type' => 'Recently Modified Crontabs',
+            'details' => 'Multiple crontab files modified'
+        ]);
 
-        // Ensure marker file exists
-        if (! file_exists($markerFile)) {
-            touch($markerFile);
-        }
-
-        $originalTime = filemtime($markerFile);
-
-        // Wait a moment to ensure timestamp difference
-        sleep(1);
+        app()->instance(SecurityScannerService::class, $mockScanner);
 
         $this->artisan('security:monitor-crontabs')
-            ->assertExitCode(0);
-
-        // Marker file timestamp should be updated
-        expect(filemtime($markerFile))->toBeGreaterThan($originalTime);
-    });
-
-    it('handles crontab change detection', function () {
-        // Ensure marker file exists for comparison
-        $markerFile = '/tmp/cron-check';
-        if (! file_exists($markerFile)) {
-            touch($markerFile);
-        }
-
-        $this->artisan('security:monitor-crontabs')
-            ->assertExitCode(0);
-
-        // Command should complete regardless of crontab changes found
+            ->assertExitCode(1);
     });
 });
