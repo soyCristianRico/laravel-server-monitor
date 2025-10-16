@@ -1,0 +1,46 @@
+{
+    "name": "cristian-dev/laravel-server-monitor",
+    "description": "Laravel package for server monitoring and security checks",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Cristian",
+            "email": "cristian@example.com"
+        }
+    ],
+    "require": {
+        "php": "^8.1",
+        "illuminate/support": "^10.0|^11.0",
+        "illuminate/console": "^10.0|^11.0",
+        "illuminate/notifications": "^10.0|^11.0",
+        "spatie/laravel-permission": "^5.0|^6.0"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^8.0|^9.0",
+        "phpunit/phpunit": "^10.0",
+        "pestphp/pest": "^2.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "CristianDev\\LaravelServerMonitor\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "CristianDev\\LaravelServerMonitor\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "CristianDev\\LaravelServerMonitor\\ServerMonitorServiceProvider"
+            ]
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
