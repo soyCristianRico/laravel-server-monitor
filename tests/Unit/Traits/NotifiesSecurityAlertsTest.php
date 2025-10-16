@@ -41,19 +41,19 @@ class TestSecurityCommand extends Command
 describe('NotifiesSecurityAlerts Trait', function () {
     beforeEach(function () {
         Notification::fake();
-        $this->command = new TestSecurityCommand();
     });
 
     describe('sendSecurityAlerts', function () {
         it('returns false when no alerts provided', function () {
-            $result = $this->command->testSendAlerts([]);
+            $command = new TestSecurityCommand();
+            $result = $command->testSendAlerts([]);
 
             expect($result)->toBeFalse();
         });
 
         it('sends alerts when admin users exist', function () {
             // Create admin role and user
-            $adminRole = Role::firstOrCreate(['name' => 'admin']);
+            $adminRole = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
             $admin = User::factory()->create();
             $admin->assignRole('admin');
 
@@ -64,7 +64,8 @@ describe('NotifiesSecurityAlerts Trait', function () {
                 ],
             ];
 
-            $result = $this->command->testSendAlerts($alerts);
+            $command = new TestSecurityCommand();
+            $result = $command->testSendAlerts($alerts);
 
             expect($result)->toBeTrue();
         });
@@ -82,7 +83,8 @@ describe('NotifiesSecurityAlerts Trait', function () {
                 ],
             ];
 
-            $result = $this->command->testSendAlerts($alerts);
+            $command = new TestSecurityCommand();
+            $result = $command->testSendAlerts($alerts);
 
             expect($result)->toBeFalse();
         });
@@ -91,11 +93,12 @@ describe('NotifiesSecurityAlerts Trait', function () {
     describe('sendSecurityReport', function () {
         it('sends reports to admin users', function () {
             // Create admin role and user
-            $adminRole = Role::firstOrCreate(['name' => 'admin']);
+            $adminRole = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
             $admin = User::factory()->create();
             $admin->assignRole('admin');
 
-            $result = $this->command->testSendReport([], 'Test report');
+            $command = new TestSecurityCommand();
+            $result = $command->testSendReport([], 'Test report');
 
             expect($result)->toBeTrue();
         });
@@ -106,7 +109,8 @@ describe('NotifiesSecurityAlerts Trait', function () {
                 $query->where('name', 'admin');
             })->delete();
 
-            $result = $this->command->testSendReport([], 'Test report');
+            $command = new TestSecurityCommand();
+            $result = $command->testSendReport([], 'Test report');
 
             expect($result)->toBeFalse();
         });
@@ -119,7 +123,8 @@ describe('NotifiesSecurityAlerts Trait', function () {
             app()->instance(SecurityNotificationService::class, $mockService);
 
             // This should not throw any errors - just call it and verify it works
-            $result = $this->command->testSendAlerts([]);
+            $command = new TestSecurityCommand();
+            $result = $command->testSendAlerts([]);
 
             // Should return false for empty alerts array
             expect($result)->toBeFalse();
