@@ -44,7 +44,12 @@ class ServerMonitorCommand extends Command
 
     protected function displayResults(array $checks): void
     {
-        foreach ($checks as $check) {
+        foreach ($checks as $name => $check) {
+            // Skip if check is not a properly formatted array
+            if (! is_array($check) || ! isset($check['status'], $check['message'])) {
+                continue;
+            }
+
             $icon = match ($check['status']) {
                 'ok' => '✅',
                 'warning' => '🟡',
