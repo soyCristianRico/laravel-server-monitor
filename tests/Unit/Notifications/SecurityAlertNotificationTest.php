@@ -26,9 +26,12 @@ describe('SecurityAlertNotification', function () {
             ->toBeInstanceOf(MailMessage::class)
             ->and($mailMessage->level)->toBe('error')
             ->and($mailMessage->subject)->toBe('[Security Monitor] Security Alert - Immediate Attention Required')
-            ->and($mailMessage->markdown)->toBe('laravel-server-monitor::emails.security-alert')
-            ->and($mailMessage->viewData)->toHaveKeys(['alerts'])
-            ->and($mailMessage->viewData['alerts'])->toBe($alerts);
+            ->and($mailMessage->greeting)->toBe('Security Alert');
+
+        // Check that it contains alert information in the intro lines
+        $introText = implode(' ', $mailMessage->introLines);
+        expect($introText)->toContain('Suspicious Processes')
+            ->and($introText)->toContain('High Disk Usage');
     });
 
     it('builds mail message for daily report when no alerts', function () {
@@ -74,14 +77,14 @@ describe('SecurityAlertNotification', function () {
         $alerts = [['type' => 'Test', 'details' => 'Details']];
         $notification = new SecurityAlertNotification($alerts);
 
-        expect($notification->alerts)->toBe($alerts);
+        expect($notification->getAlerts())->toBe($alerts);
     });
 
     it('provides report through accessor', function () {
         $report = 'Test security report';
         $notification = new SecurityAlertNotification([], $report);
 
-        expect($notification->report)->toBe($report);
+        expect($notification->getReport())->toBe($report);
     });
 
     it('uses queueable trait', function () {
@@ -91,18 +94,18 @@ describe('SecurityAlertNotification', function () {
             ->toContain('Illuminate\Bus\Queueable');
     });
 
-    it('marks alerts property as readonly', function () {
+    it('alerts property is protected', function () {
         $reflection = new ReflectionClass(SecurityAlertNotification::class);
         $property = $reflection->getProperty('alerts');
 
-        expect($property->isReadOnly())->toBeTrue();
+        expect($property->isProtected())->toBeTrue();
     });
 
-    it('marks report property as readonly', function () {
+    it('report property is protected', function () {
         $reflection = new ReflectionClass(SecurityAlertNotification::class);
         $property = $reflection->getProperty('report');
 
-        expect($property->isReadOnly())->toBeTrue();
+        expect($property->isProtected())->toBeTrue();
     });
 
     it('handles multiple alert types correctly', function () {
@@ -114,11 +117,11 @@ describe('SecurityAlertNotification', function () {
         $notification = new SecurityAlertNotification($alerts);
         $mailMessage = $notification->toMail(new User());
 
-        expect($mailMessage->viewData['alerts'])
-            ->toHaveCount(3)
-            ->and($mailMessage->viewData['alerts'][0]['type'])->toBe('Suspicious Processes')
-            ->and($mailMessage->viewData['alerts'][1]['type'])->toBe('Network Ports')
-            ->and($mailMessage->viewData['alerts'][2]['type'])->toBe('Disk Usage');
+        // Check that all alerts are included in the intro lines
+        $introText = implode(' ', $mailMessage->introLines);
+        expect($introText)->toContain('Suspicious Processes')
+            ->and($introText)->toContain('Network Ports')
+            ->and($introText)->toContain('Disk Usage');
     });
 
     it('constructs notification with different parameter combinations', function () {
@@ -129,11 +132,11 @@ describe('SecurityAlertNotification', function () {
         $reportOnly = new SecurityAlertNotification([], $report);
         $bothParams = new SecurityAlertNotification($alerts, $report);
 
-        expect($alertsOnly->alerts)->toBe($alerts)
-            ->and($alertsOnly->report)->toBeNull()
-            ->and($reportOnly->alerts)->toBe([])
-            ->and($reportOnly->report)->toBe($report)
-            ->and($bothParams->alerts)->toBe($alerts)
-            ->and($bothParams->report)->toBe($report);
+        expect($alertsOnly->getAlerts())->toBe($alerts)
+            ->and($alertsOnly->getReport())->toBeNull()
+            ->and($reportOnly->getAlerts())->toBe([])
+            ->and($reportOnly->getReport())->toBe($report)
+            ->and($bothParams->getAlerts())->toBe($alerts)
+            ->and($bothParams->getReport())->toBe($report);
     });
 });
