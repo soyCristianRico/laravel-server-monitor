@@ -12,7 +12,9 @@ class TestCase extends Orchestra
     {
         parent::setUp();
 
-        // Additional setup code if needed
+        // Run migrations
+        $this->loadLaravelMigrations();
+        $this->artisan('migrate:fresh');
     }
 
     protected function getPackageProviders($app)

@@ -3,13 +3,10 @@
 use CristianDev\LaravelServerMonitor\Services\Security\SecurityBackupService;
 
 describe('SecurityBackupService', function () {
-    beforeEach(function () {
-        $this->service = new SecurityBackupService();
-    });
-
     describe('backupCrontabs', function () {
         it('returns array of backup results', function () {
-            $results = $this->service->backupCrontabs();
+            $service = app(SecurityBackupService::class);
+            $results = $service->backupCrontabs();
 
             expect($results)->toBeArray();
 
@@ -21,6 +18,7 @@ describe('SecurityBackupService', function () {
 
     describe('cleanOldBackups', function () {
         it('returns number of deleted backups', function () {
+            $service = app(SecurityBackupService::class);
             $testDir = sys_get_temp_dir().'/test-backups-'.uniqid();
 
             // Create test directory
@@ -33,7 +31,7 @@ describe('SecurityBackupService', function () {
             mkdir($oldDir, 0755, true);
             touch($oldDir, strtotime('-35 days'));
 
-            $deletedCount = $this->service->cleanOldBackups($testDir, 30);
+            $deletedCount = $service->cleanOldBackups($testDir, 30);
 
             expect($deletedCount)->toBeInt();
             expect($deletedCount)->toBeGreaterThanOrEqual(0);
@@ -45,9 +43,10 @@ describe('SecurityBackupService', function () {
         });
 
         it('handles non-existent directory gracefully', function () {
+            $service = app(SecurityBackupService::class);
             $nonExistentDir = '/path/that/does/not/exist';
 
-            $result = $this->service->cleanOldBackups($nonExistentDir);
+            $result = $service->cleanOldBackups($nonExistentDir);
 
             expect($result)->toBe(0);
         });
@@ -55,6 +54,7 @@ describe('SecurityBackupService', function () {
 
     describe('getBackupStats', function () {
         it('returns correct stats structure for existing directory', function () {
+            $service = app(SecurityBackupService::class);
             $testDir = sys_get_temp_dir().'/test-stats-'.uniqid();
 
             // Create test directory with some content
@@ -65,7 +65,7 @@ describe('SecurityBackupService', function () {
             $backupDir = $testDir.'/backup1';
             mkdir($backupDir, 0755, true);
 
-            $stats = $this->service->getBackupStats($testDir);
+            $stats = $service->getBackupStats($testDir);
 
             expect($stats)->toBeArray();
             expect($stats)->toHaveKeys(['total_backups', 'total_size', 'oldest_backup', 'newest_backup']);
@@ -79,9 +79,10 @@ describe('SecurityBackupService', function () {
         });
 
         it('returns zero stats for non-existent directory', function () {
+            $service = app(SecurityBackupService::class);
             $nonExistentDir = '/path/that/does/not/exist';
 
-            $stats = $this->service->getBackupStats($nonExistentDir);
+            $stats = $service->getBackupStats($nonExistentDir);
 
             expect($stats)->toBe([
                 'total_backups' => 0,
@@ -94,10 +95,11 @@ describe('SecurityBackupService', function () {
 
     describe('createSecureBackup', function () {
         it('returns false for non-existent source', function () {
+            $service = app(SecurityBackupService::class);
             $nonExistentSource = '/path/that/does/not/exist';
             $destination = sys_get_temp_dir().'/test-backup';
 
-            $result = $this->service->createSecureBackup($nonExistentSource, $destination);
+            $result = $service->createSecureBackup($nonExistentSource, $destination);
 
             expect($result)->toBeFalse();
         });

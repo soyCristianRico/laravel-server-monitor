@@ -20,14 +20,14 @@
             <directory suffix="Test.php">./tests/Feature</directory>
         </testsuite>
     </testsuites>
-    <coverage processUncoveredFiles="true">
+    <source>
         <include>
             <directory suffix=".php">./src</directory>
         </include>
         <exclude>
             <directory suffix=".php">./src/Config</directory>
         </exclude>
-    </coverage>
+    </source>
     <logging>
         <junit outputFile="build/report.junit.xml"/>
     </logging>
