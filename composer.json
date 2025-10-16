@@ -1,5 +1,5 @@
 {
-    "name": "cristian-dev/laravel-server-monitor",
+    "name": "soycristianrico/laravel-server-monitor",
     "description": "Laravel package for server monitoring and security checks",
     "type": "library",
     "license": "MIT",

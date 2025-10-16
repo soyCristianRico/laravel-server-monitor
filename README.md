@@ -30,7 +30,7 @@ A comprehensive Laravel package for server monitoring and security checks. This 
 1. Install the package via Composer:
 
 ```bash
-composer require cristian-dev/laravel-server-monitor
+composer require soycristianrico/laravel-server-monitor
 ```
 
 2. Publish the configuration file:

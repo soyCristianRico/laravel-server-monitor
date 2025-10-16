@@ -28,7 +28,7 @@ php artisan list | grep -E "(server|security)"
 
 3. **Verify composer installation:**
 ```bash
-composer show cristian-dev/laravel-server-monitor
+composer show soycristianrico/laravel-server-monitor
 ```
 
 4. **Check Laravel version compatibility:**

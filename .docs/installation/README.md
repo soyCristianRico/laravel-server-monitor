@@ -15,7 +15,7 @@ Complete installation guide for Laravel Server Monitor.
 ### 1. Install via Composer
 
 ```bash
-composer require cristian-dev/laravel-server-monitor
+composer require soycristianrico/laravel-server-monitor
 ```
 
 ### 2. Install Dependencies

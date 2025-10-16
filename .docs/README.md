@@ -72,7 +72,7 @@ Comprehensive documentation for the Laravel Server Monitor package.
 
 ```bash
 # Install
-composer require cristian-dev/laravel-server-monitor
+composer require soycristianrico/laravel-server-monitor
 
 # Publish config
 php artisan vendor:publish --provider="CristianDev\LaravelServerMonitor\ServerMonitorServiceProvider"

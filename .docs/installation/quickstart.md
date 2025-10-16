@@ -7,7 +7,7 @@ Get Laravel Server Monitor running in 5 minutes.
 ### 1. Install Package (1 minute)
 
 ```bash
-composer require cristian-dev/laravel-server-monitor
+composer require soycristianrico/laravel-server-monitor
 ```
 
 ### 2. Publish Configuration (1 minute)

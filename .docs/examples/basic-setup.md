@@ -17,7 +17,7 @@ You have a Laravel application running on a VPS with:
 
 ```bash
 cd /var/www/your-laravel-app
-composer require cristian-dev/laravel-server-monitor
+composer require soycristianrico/laravel-server-monitor
 ```
 
 ### 2. Install Dependencies
