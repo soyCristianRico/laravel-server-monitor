@@ -1,109 +1,55 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuites>
-  <testsuite name="Tests\Unit\Services\ServerMonitoringServiceTest" file="tests/Unit/Services/ServerMonitoringServiceTest.php" tests="18" assertions="4" errors="17" failures="0" skipped="0" time="0.839219">
-    <testcase name="`threshold configuration` → it returns correct disk warning threshold from config" file="tests/Unit/Services/ServerMonitoringServiceTest.php::`threshold configuration` → it returns correct disk warning threshold from config" class="Tests\Unit\Services\ServerMonitoringServiceTest" classname="Tests.Unit.Services.ServerMonitoringServiceTest" assertions="0" time="0.438205">
-      <error type="ErrorException">`threshold configuration` → it returns correct disk warning threshold from configErrorException: Undefined property: P\Tests\Unit\Services\ServerMonitoringServiceTest::$service
+  <testsuite name="Tests\Unit\Console\Commands\ServerMonitorCommandTest" file="tests/Unit/Console/Commands/ServerMonitorCommandTest.php" tests="14" assertions="5" errors="9" failures="0" skipped="0" time="0.308962">
+    <testcase name="`command execution with alerts` → it displays appropriate icons for different check statuses" file="tests/Unit/Console/Commands/ServerMonitorCommandTest.php::`command execution with alerts` → it displays appropriate icons for different check statuses" class="Tests\Unit\Console\Commands\ServerMonitorCommandTest" classname="Tests.Unit.Console.Commands.ServerMonitorCommandTest" assertions="0" time="0.119477">
+      <error type="ErrorException">`command execution with alerts` → it displays appropriate icons for different check statusesErrorException: Undefined property: P\Tests\Unit\Console\Commands\ServerMonitorCommandTest::$service
 at vendor/laravel/framework/src/Illuminate/Foundation/Bootstrap/HandleExceptions.php:258
-at tests/Unit/Services/ServerMonitoringServiceTest.php:14</error>
+at tests/Unit/Console/Commands/ServerMonitorCommandTest.php:106</error>
     </testcase>
-    <testcase name="`cpu load monitoring` → it returns critical status for very high cpu load" file="tests/Unit/Services/ServerMonitoringServiceTest.php::`cpu load monitoring` → it returns critical status for very high cpu load" class="Tests\Unit\Services\ServerMonitoringServiceTest" classname="Tests.Unit.Services.ServerMonitoringServiceTest" assertions="0" time="0.030621">
-      <error type="InvalidArgumentException">`cpu load monitoring` → it returns critical status for very high cpu loadInvalidArgumentException: getCpuLoad() cannot be mocked as it is a protected method and mocking protected methods is not enabled for the currently used mock object. Use shouldAllowMockingProtectedMethods() to enable mocking of protected methods.
-at vendor/mockery/mockery/library/Mockery.php:742
-at vendor/mockery/mockery/library/Mockery.php:754
-at vendor/mockery/mockery/library/Mockery.php:574
-at tests/Unit/Services/ServerMonitoringServiceTest.php:133</error>
-    </testcase>
-    <testcase name="`mysql service monitoring` → it returns ok status when mysql is running" file="tests/Unit/Services/ServerMonitoringServiceTest.php::`mysql service monitoring` → it returns ok status when mysql is running" class="Tests\Unit\Services\ServerMonitoringServiceTest" classname="Tests.Unit.Services.ServerMonitoringServiceTest" assertions="0" time="0.023144">
-      <error type="InvalidArgumentException">`mysql service monitoring` → it returns ok status when mysql is runningInvalidArgumentException: getMysqlStatus() cannot be mocked as it is a protected method and mocking protected methods is not enabled for the currently used mock object. Use shouldAllowMockingProtectedMethods() to enable mocking of protected methods.
-at vendor/mockery/mockery/library/Mockery.php:742
-at vendor/mockery/mockery/library/Mockery.php:754
-at vendor/mockery/mockery/library/Mockery.php:574
-at tests/Unit/Services/ServerMonitoringServiceTest.php:146</error>
-    </testcase>
-    <testcase name="`disk space monitoring` → it returns warning status when disk usage exceeds warning threshold" file="tests/Unit/Services/ServerMonitoringServiceTest.php::`disk space monitoring` → it returns warning status when disk usage exceeds warning threshold" class="Tests\Unit\Services\ServerMonitoringServiceTest" classname="Tests.Unit.Services.ServerMonitoringServiceTest" assertions="0" time="0.021822">
-      <error type="InvalidArgumentException">`disk space monitoring` → it returns warning status when disk usage exceeds warning thresholdInvalidArgumentException: getDiskUsage() cannot be mocked as it is a protected method and mocking protected methods is not enabled for the currently used mock object. Use shouldAllowMockingProtectedMethods() to enable mocking of protected methods.
-at vendor/mockery/mockery/library/Mockery.php:742
-at vendor/mockery/mockery/library/Mockery.php:754
-at vendor/mockery/mockery/library/Mockery.php:574
-at tests/Unit/Services/ServerMonitoringServiceTest.php:64</error>
-    </testcase>
-    <testcase name="`alert generation` → it returns warning alerts for warning status checks" file="tests/Unit/Services/ServerMonitoringServiceTest.php::`alert generation` → it returns warning alerts for warning status checks" class="Tests\Unit\Services\ServerMonitoringServiceTest" classname="Tests.Unit.Services.ServerMonitoringServiceTest" assertions="0" time="0.015777">
-      <error type="ErrorException">`alert generation` → it returns warning alerts for warning status checksErrorException: Undefined property: P\Tests\Unit\Services\ServerMonitoringServiceTest::$service
+    <testcase name="`status display logic` → it shows correct icon for ok status" file="tests/Unit/Console/Commands/ServerMonitorCommandTest.php::`status display logic` → it shows correct icon for ok status" class="Tests\Unit\Console\Commands\ServerMonitorCommandTest" classname="Tests.Unit.Console.Commands.ServerMonitorCommandTest" assertions="1" time="0.015614"/>
+    <testcase name="`command execution with no alerts` → it displays success message when all checks pass" file="tests/Unit/Console/Commands/ServerMonitorCommandTest.php::`command execution with no alerts` → it displays success message when all checks pass" class="Tests\Unit\Console\Commands\ServerMonitorCommandTest" classname="Tests.Unit.Console.Commands.ServerMonitorCommandTest" assertions="0" time="0.013834">
+      <error type="ErrorException">`command execution with no alerts` → it displays success message when all checks passErrorException: Undefined property: P\Tests\Unit\Console\Commands\ServerMonitorCommandTest::$service
 at vendor/laravel/framework/src/Illuminate/Foundation/Bootstrap/HandleExceptions.php:258
-at tests/Unit/Services/ServerMonitoringServiceTest.php:199</error>
+at tests/Unit/Console/Commands/ServerMonitorCommandTest.php:45</error>
     </testcase>
-    <testcase name="`disk space monitoring` → it returns critical status when disk usage exceeds critical threshold" file="tests/Unit/Services/ServerMonitoringServiceTest.php::`disk space monitoring` → it returns critical status when disk usage exceeds critical threshold" class="Tests\Unit\Services\ServerMonitoringServiceTest" classname="Tests.Unit.Services.ServerMonitoringServiceTest" assertions="0" time="0.021312">
-      <error type="InvalidArgumentException">`disk space monitoring` → it returns critical status when disk usage exceeds critical thresholdInvalidArgumentException: getDiskUsage() cannot be mocked as it is a protected method and mocking protected methods is not enabled for the currently used mock object. Use shouldAllowMockingProtectedMethods() to enable mocking of protected methods.
-at vendor/mockery/mockery/library/Mockery.php:742
-at vendor/mockery/mockery/library/Mockery.php:754
-at vendor/mockery/mockery/library/Mockery.php:574
-at tests/Unit/Services/ServerMonitoringServiceTest.php:76</error>
-    </testcase>
-    <testcase name="`threshold configuration` → it returns default disk warning threshold when config is missing" file="tests/Unit/Services/ServerMonitoringServiceTest.php::`threshold configuration` → it returns default disk warning threshold when config is missing" class="Tests\Unit\Services\ServerMonitoringServiceTest" classname="Tests.Unit.Services.ServerMonitoringServiceTest" assertions="0" time="0.021004">
-      <error type="ErrorException">`threshold configuration` → it returns default disk warning threshold when config is missingErrorException: Undefined property: P\Tests\Unit\Services\ServerMonitoringServiceTest::$service
+    <testcase name="`status display logic` → it shows question mark for unknown status" file="tests/Unit/Console/Commands/ServerMonitorCommandTest.php::`status display logic` → it shows question mark for unknown status" class="Tests\Unit\Console\Commands\ServerMonitorCommandTest" classname="Tests.Unit.Console.Commands.ServerMonitorCommandTest" assertions="1" time="0.013032"/>
+    <testcase name="`status display logic` → it shows correct icon for critical status" file="tests/Unit/Console/Commands/ServerMonitorCommandTest.php::`status display logic` → it shows correct icon for critical status" class="Tests\Unit\Console\Commands\ServerMonitorCommandTest" classname="Tests.Unit.Console.Commands.ServerMonitorCommandTest" assertions="1" time="0.013264"/>
+    <testcase name="`service integration` → it calls monitoring service correctly" file="tests/Unit/Console/Commands/ServerMonitorCommandTest.php::`service integration` → it calls monitoring service correctly" class="Tests\Unit\Console\Commands\ServerMonitorCommandTest" classname="Tests.Unit.Console.Commands.ServerMonitorCommandTest" assertions="0" time="0.013605">
+      <error type="ErrorException">`service integration` → it calls monitoring service correctlyErrorException: Undefined property: P\Tests\Unit\Console\Commands\ServerMonitorCommandTest::$service
 at vendor/laravel/framework/src/Illuminate/Foundation/Bootstrap/HandleExceptions.php:258
-at tests/Unit/Services/ServerMonitoringServiceTest.php:20</error>
+at tests/Unit/Console/Commands/ServerMonitorCommandTest.php:191</error>
     </testcase>
-    <testcase name="`memory monitoring` → it returns correct memory usage check structure" file="tests/Unit/Services/ServerMonitoringServiceTest.php::`memory monitoring` → it returns correct memory usage check structure" class="Tests\Unit\Services\ServerMonitoringServiceTest" classname="Tests.Unit.Services.ServerMonitoringServiceTest" assertions="0" time="0.033050">
-      <error type="InvalidArgumentException">`memory monitoring` → it returns correct memory usage check structureInvalidArgumentException: getMemoryUsage() cannot be mocked as it is a protected method and mocking protected methods is not enabled for the currently used mock object. Use shouldAllowMockingProtectedMethods() to enable mocking of protected methods.
-at vendor/mockery/mockery/library/Mockery.php:742
-at vendor/mockery/mockery/library/Mockery.php:754
-at vendor/mockery/mockery/library/Mockery.php:574
-at tests/Unit/Services/ServerMonitoringServiceTest.php:90</error>
-    </testcase>
-    <testcase name="`disk space monitoring` → it returns ok status when disk usage is below warning threshold" file="tests/Unit/Services/ServerMonitoringServiceTest.php::`disk space monitoring` → it returns ok status when disk usage is below warning threshold" class="Tests\Unit\Services\ServerMonitoringServiceTest" classname="Tests.Unit.Services.ServerMonitoringServiceTest" assertions="0" time="0.032562">
-      <error type="InvalidArgumentException">`disk space monitoring` → it returns ok status when disk usage is below warning thresholdInvalidArgumentException: getDiskUsage() cannot be mocked as it is a protected method and mocking protected methods is not enabled for the currently used mock object. Use shouldAllowMockingProtectedMethods() to enable mocking of protected methods.
-at vendor/mockery/mockery/library/Mockery.php:742
-at vendor/mockery/mockery/library/Mockery.php:754
-at vendor/mockery/mockery/library/Mockery.php:574
-at tests/Unit/Services/ServerMonitoringServiceTest.php:47</error>
-    </testcase>
-    <testcase name="`threshold configuration` → it returns correct memory thresholds from config" file="tests/Unit/Services/ServerMonitoringServiceTest.php::`threshold configuration` → it returns correct memory thresholds from config" class="Tests\Unit\Services\ServerMonitoringServiceTest" classname="Tests.Unit.Services.ServerMonitoringServiceTest" assertions="0" time="0.028497">
-      <error type="ErrorException">`threshold configuration` → it returns correct memory thresholds from configErrorException: Undefined property: P\Tests\Unit\Services\ServerMonitoringServiceTest::$service
+    <testcase name="`command configuration` → it has correct signature" file="tests/Unit/Console/Commands/ServerMonitorCommandTest.php::`command configuration` → it has correct signature" class="Tests\Unit\Console\Commands\ServerMonitorCommandTest" classname="Tests.Unit.Console.Commands.ServerMonitorCommandTest" assertions="0" time="0.013671">
+      <error type="ErrorException">`command configuration` → it has correct signatureErrorException: Undefined property: P\Tests\Unit\Console\Commands\ServerMonitorCommandTest::$command
 at vendor/laravel/framework/src/Illuminate/Foundation/Bootstrap/HandleExceptions.php:258
-at tests/Unit/Services/ServerMonitoringServiceTest.php:29</error>
+at tests/Unit/Console/Commands/ServerMonitorCommandTest.php:14</error>
     </testcase>
-    <testcase name="`alert generation` → it returns critical alerts for critical status checks" file="tests/Unit/Services/ServerMonitoringServiceTest.php::`alert generation` → it returns critical alerts for critical status checks" class="Tests\Unit\Services\ServerMonitoringServiceTest" classname="Tests.Unit.Services.ServerMonitoringServiceTest" assertions="0" time="0.019736">
-      <error type="ErrorException">`alert generation` → it returns critical alerts for critical status checksErrorException: Undefined property: P\Tests\Unit\Services\ServerMonitoringServiceTest::$service
+    <testcase name="`command configuration` → it has correct description" file="tests/Unit/Console/Commands/ServerMonitorCommandTest.php::`command configuration` → it has correct description" class="Tests\Unit\Console\Commands\ServerMonitorCommandTest" classname="Tests.Unit.Console.Commands.ServerMonitorCommandTest" assertions="0" time="0.014160">
+      <error type="ErrorException">`command configuration` → it has correct descriptionErrorException: Undefined property: P\Tests\Unit\Console\Commands\ServerMonitorCommandTest::$command
 at vendor/laravel/framework/src/Illuminate/Foundation/Bootstrap/HandleExceptions.php:258
-at tests/Unit/Services/ServerMonitoringServiceTest.php:220</error>
+at tests/Unit/Console/Commands/ServerMonitorCommandTest.php:18</error>
     </testcase>
-    <testcase name="`cpu load monitoring` → it returns correct cpu load check structure" file="tests/Unit/Services/ServerMonitoringServiceTest.php::`cpu load monitoring` → it returns correct cpu load check structure" class="Tests\Unit\Services\ServerMonitoringServiceTest" classname="Tests.Unit.Services.ServerMonitoringServiceTest" assertions="0" time="0.016800">
-      <error type="InvalidArgumentException">`cpu load monitoring` → it returns correct cpu load check structureInvalidArgumentException: getCpuLoad() cannot be mocked as it is a protected method and mocking protected methods is not enabled for the currently used mock object. Use shouldAllowMockingProtectedMethods() to enable mocking of protected methods.
-at vendor/mockery/mockery/library/Mockery.php:742
-at vendor/mockery/mockery/library/Mockery.php:754
-at vendor/mockery/mockery/library/Mockery.php:574
-at tests/Unit/Services/ServerMonitoringServiceTest.php:116</error>
-    </testcase>
-    <testcase name="`threshold configuration` → it returns correct cpu thresholds from config" file="tests/Unit/Services/ServerMonitoringServiceTest.php::`threshold configuration` → it returns correct cpu thresholds from config" class="Tests\Unit\Services\ServerMonitoringServiceTest" classname="Tests.Unit.Services.ServerMonitoringServiceTest" assertions="0" time="0.019188">
-      <error type="ErrorException">`threshold configuration` → it returns correct cpu thresholds from configErrorException: Undefined property: P\Tests\Unit\Services\ServerMonitoringServiceTest::$service
+    <testcase name="`service integration` → it passes check results to alert generation" file="tests/Unit/Console/Commands/ServerMonitorCommandTest.php::`service integration` → it passes check results to alert generation" class="Tests\Unit\Console\Commands\ServerMonitorCommandTest" classname="Tests.Unit.Console.Commands.ServerMonitorCommandTest" assertions="0" time="0.014959">
+      <error type="ErrorException">`service integration` → it passes check results to alert generationErrorException: Undefined property: P\Tests\Unit\Console\Commands\ServerMonitorCommandTest::$service
 at vendor/laravel/framework/src/Illuminate/Foundation/Bootstrap/HandleExceptions.php:258
-at tests/Unit/Services/ServerMonitoringServiceTest.php:39</error>
+at tests/Unit/Console/Commands/ServerMonitorCommandTest.php:200</error>
     </testcase>
-    <testcase name="`alert generation` → it returns empty array when all checks are ok" file="tests/Unit/Services/ServerMonitoringServiceTest.php::`alert generation` → it returns empty array when all checks are ok" class="Tests\Unit\Services\ServerMonitoringServiceTest" classname="Tests.Unit.Services.ServerMonitoringServiceTest" assertions="0" time="0.021277">
-      <error type="ErrorException">`alert generation` → it returns empty array when all checks are okErrorException: Undefined property: P\Tests\Unit\Services\ServerMonitoringServiceTest::$service
+    <testcase name="`command execution with alerts` → it returns error exit code when alerts are present" file="tests/Unit/Console/Commands/ServerMonitorCommandTest.php::`command execution with alerts` → it returns error exit code when alerts are present" class="Tests\Unit\Console\Commands\ServerMonitorCommandTest" classname="Tests.Unit.Console.Commands.ServerMonitorCommandTest" assertions="0" time="0.017151">
+      <error type="ErrorException">`command execution with alerts` → it returns error exit code when alerts are presentErrorException: Undefined property: P\Tests\Unit\Console\Commands\ServerMonitorCommandTest::$service
 at vendor/laravel/framework/src/Illuminate/Foundation/Bootstrap/HandleExceptions.php:258
-at tests/Unit/Services/ServerMonitoringServiceTest.php:184</error>
+at tests/Unit/Console/Commands/ServerMonitorCommandTest.php:77</error>
     </testcase>
-    <testcase name="`alert generation` → it returns multiple alerts for multiple issues" file="tests/Unit/Services/ServerMonitoringServiceTest.php::`alert generation` → it returns multiple alerts for multiple issues" class="Tests\Unit\Services\ServerMonitoringServiceTest" classname="Tests.Unit.Services.ServerMonitoringServiceTest" assertions="0" time="0.015707">
-      <error type="ErrorException">`alert generation` → it returns multiple alerts for multiple issuesErrorException: Undefined property: P\Tests\Unit\Services\ServerMonitoringServiceTest::$service
+    <testcase name="`command execution with no alerts` → it returns success exit code when all checks pass" file="tests/Unit/Console/Commands/ServerMonitorCommandTest.php::`command execution with no alerts` → it returns success exit code when all checks pass" class="Tests\Unit\Console\Commands\ServerMonitorCommandTest" classname="Tests.Unit.Console.Commands.ServerMonitorCommandTest" assertions="0" time="0.014774">
+      <error type="ErrorException">`command execution with no alerts` → it returns success exit code when all checks passErrorException: Undefined property: P\Tests\Unit\Console\Commands\ServerMonitorCommandTest::$service
 at vendor/laravel/framework/src/Illuminate/Foundation/Bootstrap/HandleExceptions.php:258
-at tests/Unit/Services/ServerMonitoringServiceTest.php:247</error>
+at tests/Unit/Console/Commands/ServerMonitorCommandTest.php:31</error>
     </testcase>
-    <testcase name="`memory monitoring` → it returns warning status for high memory usage" file="tests/Unit/Services/ServerMonitoringServiceTest.php::`memory monitoring` → it returns warning status for high memory usage" class="Tests\Unit\Services\ServerMonitoringServiceTest" classname="Tests.Unit.Services.ServerMonitoringServiceTest" assertions="0" time="0.022276">
-      <error type="InvalidArgumentException">`memory monitoring` → it returns warning status for high memory usageInvalidArgumentException: getMemoryUsage() cannot be mocked as it is a protected method and mocking protected methods is not enabled for the currently used mock object. Use shouldAllowMockingProtectedMethods() to enable mocking of protected methods.
-at vendor/mockery/mockery/library/Mockery.php:742
-at vendor/mockery/mockery/library/Mockery.php:754
-at vendor/mockery/mockery/library/Mockery.php:574
-at tests/Unit/Services/ServerMonitoringServiceTest.php:103</error>
-    </testcase>
-    <testcase name="`complete monitoring workflow` → it runs all checks and returns proper structure" file="tests/Unit/Services/ServerMonitoringServiceTest.php::`complete monitoring workflow` → it runs all checks and returns proper structure" class="Tests\Unit\Services\ServerMonitoringServiceTest" classname="Tests.Unit.Services.ServerMonitoringServiceTest" assertions="4" time="0.031291"/>
-    <testcase name="`mysql service monitoring` → it returns critical status when mysql is not running" file="tests/Unit/Services/ServerMonitoringServiceTest.php::`mysql service monitoring` → it returns critical status when mysql is not running" class="Tests\Unit\Services\ServerMonitoringServiceTest" classname="Tests.Unit.Services.ServerMonitoringServiceTest" assertions="0" time="0.026949">
-      <error type="InvalidArgumentException">`mysql service monitoring` → it returns critical status when mysql is not runningInvalidArgumentException: getMysqlStatus() cannot be mocked as it is a protected method and mocking protected methods is not enabled for the currently used mock object. Use shouldAllowMockingProtectedMethods() to enable mocking of protected methods.
-at vendor/mockery/mockery/library/Mockery.php:742
-at vendor/mockery/mockery/library/Mockery.php:754
-at vendor/mockery/mockery/library/Mockery.php:574
-at tests/Unit/Services/ServerMonitoringServiceTest.php:161</error>
+    <testcase name="`trait integration` → it uses NotifiesSecurityAlerts trait" file="tests/Unit/Console/Commands/ServerMonitorCommandTest.php::`trait integration` → it uses NotifiesSecurityAlerts trait" class="Tests\Unit\Console\Commands\ServerMonitorCommandTest" classname="Tests.Unit.Console.Commands.ServerMonitorCommandTest" assertions="1" time="0.016743"/>
+    <testcase name="`status display logic` → it shows correct icon for warning status" file="tests/Unit/Console/Commands/ServerMonitorCommandTest.php::`status display logic` → it shows correct icon for warning status" class="Tests\Unit\Console\Commands\ServerMonitorCommandTest" classname="Tests.Unit.Console.Commands.ServerMonitorCommandTest" assertions="1" time="0.014780"/>
+    <testcase name="`alert notification` → it sends alerts when issues are detected" file="tests/Unit/Console/Commands/ServerMonitorCommandTest.php::`alert notification` → it sends alerts when issues are detected" class="Tests\Unit\Console\Commands\ServerMonitorCommandTest" classname="Tests.Unit.Console.Commands.ServerMonitorCommandTest" assertions="0" time="0.013898">
+      <error type="ErrorException">`alert notification` → it sends alerts when issues are detectedErrorException: Undefined property: P\Tests\Unit\Console\Commands\ServerMonitorCommandTest::$service
+at vendor/laravel/framework/src/Illuminate/Foundation/Bootstrap/HandleExceptions.php:258
+at tests/Unit/Console/Commands/ServerMonitorCommandTest.php:131</error>
     </testcase>
   </testsuite>
 </testsuites>

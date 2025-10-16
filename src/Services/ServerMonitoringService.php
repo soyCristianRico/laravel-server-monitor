@@ -6,7 +6,7 @@ class ServerMonitoringService
 {
     public function getDiskWarningThreshold(): int
     {
-        return config('server-monitor.monitoring.disk.warning_threshold', 80);
+        return config('server-monitor.monitoring.disk.warning_threshold') ?? 80;
     }
 
     public function getDiskCriticalThreshold(): int
@@ -117,6 +117,17 @@ class ServerMonitoringService
                 ];
             }
         }
+
+        // Sort alerts by priority (critical first)
+        usort($alerts, function ($a, $b) {
+            if ($a['type'] === 'CRITICAL' && $b['type'] === 'WARNING') {
+                return -1;
+            }
+            if ($a['type'] === 'WARNING' && $b['type'] === 'CRITICAL') {
+                return 1;
+            }
+            return 0;
+        });
 
         return $alerts;
     }

@@ -3,21 +3,19 @@
 use CristianDev\LaravelServerMonitor\Services\ServerMonitoringService;
 
 describe('ServerMonitoringService', function () {
-    beforeEach(function () {
-        $this->service = new ServerMonitoringService();
-    });
-
     describe('threshold configuration', function () {
         it('returns correct disk warning threshold from config', function () {
             config(['server-monitor.monitoring.disk.warning_threshold' => 85]);
 
-            expect($this->service->getDiskWarningThreshold())->toBe(85);
+            $service = app(ServerMonitoringService::class);
+            expect($service->getDiskWarningThreshold())->toBe(85);
         });
 
         it('returns default disk warning threshold when config is missing', function () {
             config(['server-monitor.monitoring.disk.warning_threshold' => null]);
 
-            expect($this->service->getDiskWarningThreshold())->toBe(80);
+            $service = app(ServerMonitoringService::class);
+            expect($service->getDiskWarningThreshold())->toBe(80);
         });
 
         it('returns correct memory thresholds from config', function () {
@@ -26,8 +24,9 @@ describe('ServerMonitoringService', function () {
                 'server-monitor.monitoring.memory.critical_threshold' => 85
             ]);
 
-            expect($this->service->getMemoryWarningThreshold())->toBe(75);
-            expect($this->service->getMemoryCriticalThreshold())->toBe(85);
+            $service = app(ServerMonitoringService::class);
+            expect($service->getMemoryWarningThreshold())->toBe(75);
+            expect($service->getMemoryCriticalThreshold())->toBe(85);
         });
 
         it('returns correct cpu thresholds from config', function () {
@@ -36,14 +35,16 @@ describe('ServerMonitoringService', function () {
                 'server-monitor.monitoring.cpu.critical_threshold' => 80
             ]);
 
-            expect($this->service->getCpuWarningThreshold())->toBe(60);
-            expect($this->service->getCpuCriticalThreshold())->toBe(80);
+            $service = app(ServerMonitoringService::class);
+            expect($service->getCpuWarningThreshold())->toBe(60);
+            expect($service->getCpuCriticalThreshold())->toBe(80);
         });
     });
 
     describe('disk space monitoring', function () {
         it('returns ok status when disk usage is below warning threshold', function () {
-            $service = Mockery::mock(ServerMonitoringService::class)->makePartial();
+            $service = Mockery::mock(ServerMonitoringService::class)->makePartial()
+                ->shouldAllowMockingProtectedMethods();
             $service->shouldReceive('getDiskUsage')->andReturn(50);
             $service->shouldReceive('getDiskWarningThreshold')->andReturn(80);
             $service->shouldReceive('getDiskCriticalThreshold')->andReturn(90);
@@ -60,7 +61,8 @@ describe('ServerMonitoringService', function () {
         });
 
         it('returns warning status when disk usage exceeds warning threshold', function () {
-            $service = Mockery::mock(ServerMonitoringService::class)->makePartial();
+            $service = Mockery::mock(ServerMonitoringService::class)->makePartial()
+                ->shouldAllowMockingProtectedMethods();
             $service->shouldReceive('getDiskUsage')->andReturn(85);
             $service->shouldReceive('getDiskWarningThreshold')->andReturn(80);
             $service->shouldReceive('getDiskCriticalThreshold')->andReturn(90);
@@ -72,7 +74,8 @@ describe('ServerMonitoringService', function () {
         });
 
         it('returns critical status when disk usage exceeds critical threshold', function () {
-            $service = Mockery::mock(ServerMonitoringService::class)->makePartial();
+            $service = Mockery::mock(ServerMonitoringService::class)->makePartial()
+                ->shouldAllowMockingProtectedMethods();
             $service->shouldReceive('getDiskUsage')->andReturn(95);
             $service->shouldReceive('getDiskWarningThreshold')->andReturn(80);
             $service->shouldReceive('getDiskCriticalThreshold')->andReturn(90);
@@ -86,7 +89,8 @@ describe('ServerMonitoringService', function () {
 
     describe('memory monitoring', function () {
         it('returns correct memory usage check structure', function () {
-            $service = Mockery::mock(ServerMonitoringService::class)->makePartial();
+            $service = Mockery::mock(ServerMonitoringService::class)->makePartial()
+                ->shouldAllowMockingProtectedMethods();
             $service->shouldReceive('getMemoryUsage')->andReturn(65);
             $service->shouldReceive('getMemoryWarningThreshold')->andReturn(80);
             $service->shouldReceive('getMemoryCriticalThreshold')->andReturn(90);
@@ -99,7 +103,8 @@ describe('ServerMonitoringService', function () {
         });
 
         it('returns warning status for high memory usage', function () {
-            $service = Mockery::mock(ServerMonitoringService::class)->makePartial();
+            $service = Mockery::mock(ServerMonitoringService::class)->makePartial()
+                ->shouldAllowMockingProtectedMethods();
             $service->shouldReceive('getMemoryUsage')->andReturn(85);
             $service->shouldReceive('getMemoryWarningThreshold')->andReturn(80);
             $service->shouldReceive('getMemoryCriticalThreshold')->andReturn(90);
@@ -112,7 +117,8 @@ describe('ServerMonitoringService', function () {
 
     describe('cpu load monitoring', function () {
         it('returns correct cpu load check structure', function () {
-            $service = Mockery::mock(ServerMonitoringService::class)->makePartial();
+            $service = Mockery::mock(ServerMonitoringService::class)->makePartial()
+                ->shouldAllowMockingProtectedMethods();
             $service->shouldReceive('getCpuLoad')->andReturn(0.45);
             $service->shouldReceive('getCpuWarningThreshold')->andReturn(70);
             $service->shouldReceive('getCpuCriticalThreshold')->andReturn(90);
@@ -129,7 +135,8 @@ describe('ServerMonitoringService', function () {
         });
 
         it('returns critical status for very high cpu load', function () {
-            $service = Mockery::mock(ServerMonitoringService::class)->makePartial();
+            $service = Mockery::mock(ServerMonitoringService::class)->makePartial()
+                ->shouldAllowMockingProtectedMethods();
             $service->shouldReceive('getCpuLoad')->andReturn(95.0);
             $service->shouldReceive('getCpuWarningThreshold')->andReturn(70);
             $service->shouldReceive('getCpuCriticalThreshold')->andReturn(90);
@@ -142,7 +149,8 @@ describe('ServerMonitoringService', function () {
 
     describe('mysql service monitoring', function () {
         it('returns ok status when mysql is running', function () {
-            $service = Mockery::mock(ServerMonitoringService::class)->makePartial();
+            $service = Mockery::mock(ServerMonitoringService::class)->makePartial()
+                ->shouldAllowMockingProtectedMethods();
             $service->shouldReceive('getMysqlStatus')->andReturn(true);
 
             $result = $service->checkMysqlService();
@@ -157,7 +165,8 @@ describe('ServerMonitoringService', function () {
         });
 
         it('returns critical status when mysql is not running', function () {
-            $service = Mockery::mock(ServerMonitoringService::class)->makePartial();
+            $service = Mockery::mock(ServerMonitoringService::class)->makePartial()
+                ->shouldAllowMockingProtectedMethods();
             $service->shouldReceive('getMysqlStatus')->andReturn(false);
 
             $result = $service->checkMysqlService();
@@ -181,7 +190,8 @@ describe('ServerMonitoringService', function () {
                 'mysql' => ['status' => 'ok', 'message' => 'MySQL OK'],
             ];
 
-            $alerts = $this->service->getAlerts($checks);
+            $service = app(ServerMonitoringService::class);
+            $alerts = $service->getAlerts($checks);
 
             expect($alerts)->toBeEmpty();
         });
@@ -196,7 +206,8 @@ describe('ServerMonitoringService', function () {
                 ],
             ];
 
-            $alerts = $this->service->getAlerts($checks);
+            $service = app(ServerMonitoringService::class);
+            $alerts = $service->getAlerts($checks);
 
             expect($alerts)->toHaveCount(1);
             expect($alerts[0])->toMatchArray([
@@ -217,7 +228,8 @@ describe('ServerMonitoringService', function () {
                 ],
             ];
 
-            $alerts = $this->service->getAlerts($checks);
+            $service = app(ServerMonitoringService::class);
+            $alerts = $service->getAlerts($checks);
 
             expect($alerts)->toHaveCount(1);
             expect($alerts[0])->toMatchArray([
@@ -244,7 +256,8 @@ describe('ServerMonitoringService', function () {
                 ],
             ];
 
-            $alerts = $this->service->getAlerts($checks);
+            $service = app(ServerMonitoringService::class);
+            $alerts = $service->getAlerts($checks);
 
             expect($alerts)->toHaveCount(2);
             expect($alerts[0]['type'])->toBe('CRITICAL');
@@ -254,7 +267,8 @@ describe('ServerMonitoringService', function () {
 
     describe('complete monitoring workflow', function () {
         it('runs all checks and returns proper structure', function () {
-            $service = Mockery::mock(ServerMonitoringService::class)->makePartial();
+            $service = Mockery::mock(ServerMonitoringService::class)->makePartial()
+                ->shouldAllowMockingProtectedMethods();
             $service->shouldReceive('checkDiskSpace')->andReturn(['status' => 'ok']);
             $service->shouldReceive('checkMemoryUsage')->andReturn(['status' => 'ok']);
             $service->shouldReceive('checkCpuLoad')->andReturn(['status' => 'ok']);
