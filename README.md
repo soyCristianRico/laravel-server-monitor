@@ -8,6 +8,7 @@ A comprehensive Laravel package for server monitoring and security checks. This 
   - CPU load monitoring with configurable thresholds
   - Memory usage tracking
   - Disk space monitoring
+  - Swap usage monitoring with early warning detection
   - MySQL service status checking
 
 - **Security Monitoring**
@@ -27,19 +28,47 @@ A comprehensive Laravel package for server monitoring and security checks. This 
 
 ## Installation
 
-1. Install the package via Composer:
+### From GitHub Repository
+
+1. Add the repository to your project:
+
+```bash
+composer config repositories.laravel-server-monitor vcs https://github.com/soycristianrico/laravel-server-monitor
+```
+
+2. Install the package via Composer:
+
+```bash
+composer require soycristianrico/laravel-server-monitor:dev-main
+```
+
+### From Packagist (when published)
 
 ```bash
 composer require soycristianrico/laravel-server-monitor
 ```
 
-2. Publish the configuration file:
+3. Publish the configuration file:
 
 ```bash
 php artisan vendor:publish --provider="SoyCristianRico\LaravelServerMonitor\ServerMonitorServiceProvider" --tag="server-monitor-config"
 ```
 
-3. Configure your settings in `config/server-monitor.php`
+4. Configure your settings in `config/server-monitor.php`
+
+## Updating the Package
+
+To update the package to the latest version:
+
+```bash
+composer update soycristianrico/laravel-server-monitor
+```
+
+If you need to republish the configuration after an update:
+
+```bash
+php artisan vendor:publish --provider="SoyCristianRico\LaravelServerMonitor\ServerMonitorServiceProvider" --tag="server-monitor-config" --force
+```
 
 ## Configuration
 
@@ -62,6 +91,10 @@ return [
             'warning_threshold' => 70,
             'critical_threshold' => 90,
         ],
+        'swap' => [
+            'warning_threshold' => 20,  // Warning at 20% swap usage
+            'critical_threshold' => 50, // Critical at 50% swap usage
+        ],
     ],
     'notifications' => [
         'admin_role' => 'admin',
@@ -81,6 +114,8 @@ SERVER_MONITOR_MEMORY_WARNING=80
 SERVER_MONITOR_MEMORY_CRITICAL=90
 SERVER_MONITOR_CPU_WARNING=70
 SERVER_MONITOR_CPU_CRITICAL=90
+SERVER_MONITOR_SWAP_WARNING=20
+SERVER_MONITOR_SWAP_CRITICAL=50
 SERVER_MONITOR_ADMIN_ROLE=admin
 SERVER_MONITOR_USER_MODEL="App\\Models\\User"
 ```
@@ -155,6 +190,7 @@ Starting server monitoring...
 ✅ Disk space usage is 45%
 ✅ Memory usage is 67%
 ✅ CPU load is 0.34
+🟡 Swap usage is 25%
 🔴 MySQL service is not running
 Server monitoring alerts sent successfully!
 ```
