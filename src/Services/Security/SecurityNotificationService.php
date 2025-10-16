@@ -17,8 +17,12 @@ class SecurityNotificationService
         $adminRoleName = config('server-monitor.notifications.admin_role', 'admin');
         $userModel = config('server-monitor.notifications.user_model', \App\Models\User::class);
 
-        if (class_exists($userModel) && method_exists($userModel, 'role')) {
-            $userModel::role($adminRoleName)->each(function ($admin) use ($alerts, &$notificationsSent) {
+        if (class_exists($userModel)) {
+            $admins = $userModel::whereHas('roles', function ($query) use ($adminRoleName) {
+                $query->where('name', $adminRoleName);
+            })->get();
+
+            $admins->each(function ($admin) use ($alerts, &$notificationsSent) {
                 $admin->notify(new SecurityAlertNotification($alerts));
                 $notificationsSent = true;
             });
@@ -37,8 +41,12 @@ class SecurityNotificationService
         $adminRoleName = config('server-monitor.notifications.admin_role', 'admin');
         $userModel = config('server-monitor.notifications.user_model', \App\Models\User::class);
 
-        if (class_exists($userModel) && method_exists($userModel, 'role')) {
-            $userModel::role($adminRoleName)->each(function ($admin) use ($alerts, $report, &$notificationsSent) {
+        if (class_exists($userModel)) {
+            $admins = $userModel::whereHas('roles', function ($query) use ($adminRoleName) {
+                $query->where('name', $adminRoleName);
+            })->get();
+
+            $admins->each(function ($admin) use ($alerts, $report, &$notificationsSent) {
                 $admin->notify(new SecurityAlertNotification($alerts, $report));
                 $notificationsSent = true;
             });
