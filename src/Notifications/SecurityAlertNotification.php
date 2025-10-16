@@ -22,30 +22,46 @@ class SecurityAlertNotification extends Notification
 
     public function toMail($notifiable): MailMessage
     {
-        $subject = count($this->alerts) > 0
-            ? 'Security Alert: ' . count($this->alerts) . ' issue(s) detected'
-            : 'Security Report';
+        if (count($this->alerts) > 0) {
+            // Security alert with issues
+            $mailMessage = (new MailMessage)
+                ->level('error')
+                ->subject('[Security Monitor] Security Alert - Immediate Attention Required')
+                ->greeting('Security Alert')
+                ->line('The following security issues have been detected on your server:');
 
-        $mailMessage = (new MailMessage)
-            ->subject($subject)
-            ->greeting('Security Alert')
-            ->line('The following security issues have been detected on your server:');
+            foreach ($this->alerts as $alert) {
+                $mailMessage->line("**{$alert['type']}**")
+                           ->line($alert['details'] ?? 'No details available')
+                           ->line('---');
+            }
 
-        foreach ($this->alerts as $alert) {
-            $mailMessage->line("**{$alert['type']}**")
-                       ->line($alert['details'] ?? 'No details available')
-                       ->line('---');
+            if ($this->report) {
+                $mailMessage->line('**Additional Report:**')
+                           ->line($this->report);
+            }
+
+            $mailMessage->line('Please review these alerts immediately and take appropriate action.')
+                       ->line('This is an automated security monitoring message.');
+
+            return $mailMessage;
+        } else {
+            // Daily report without issues
+            $mailMessage = (new MailMessage)
+                ->level('info')
+                ->subject('[Security Monitor] Daily Security Report - All Clear');
+
+            if ($this->report) {
+                $mailMessage->line('Daily security scan completed successfully.')
+                           ->line('No critical security issues were detected.')
+                           ->line('Report details:')
+                           ->line($this->report);
+            } else {
+                $mailMessage->line('Security check completed without issues.');
+            }
+
+            return $mailMessage;
         }
-
-        if ($this->report) {
-            $mailMessage->line('**Additional Report:**')
-                       ->line($this->report);
-        }
-
-        $mailMessage->line('Please review these alerts immediately and take appropriate action.')
-                   ->line('This is an automated security monitoring message.');
-
-        return $mailMessage;
     }
 
     public function toArray($notifiable): array
@@ -55,5 +71,15 @@ class SecurityAlertNotification extends Notification
             'alerts' => $this->alerts,
             'report' => $this->report,
         ];
+    }
+
+    public function getAlerts(): array
+    {
+        return $this->alerts;
+    }
+
+    public function getReport(): ?string
+    {
+        return $this->report;
     }
 }
