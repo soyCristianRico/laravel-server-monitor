@@ -148,6 +148,128 @@ describe('SecurityScannerService', function () {
             ]);
             expect($expectedAlert['details'])->toBeString();
         });
+
+        it('implements caching to prevent duplicate alerts for same users', function () {
+            // Create a real service instance to test actual caching behavior
+            $service = new SecurityScannerService();
+
+            // Clear any existing cache
+            $cacheDir = function_exists('storage_path')
+                ? storage_path('security_cache')
+                : sys_get_temp_dir().'/laravel_server_monitor_cache';
+
+            if (is_dir($cacheDir)) {
+                $files = glob($cacheDir.'/new_users_*.json');
+                foreach ($files as $file) {
+                    if (file_exists($file)) {
+                        unlink($file);
+                    }
+                }
+            }
+
+            // Set configuration
+            config(['server-monitor.security.alert_cooldown' => 120]); // 120 minutes
+            config(['server-monitor.security.whitelisted_users' => ['forge', 'root', 'www-data']]);
+            config(['server-monitor.security.whitelisted_directories' => ['/home/forge', '/home/root']]);
+
+            // Test the caching mechanism directly with private methods
+            $reflection = new ReflectionClass($service);
+            $storeMethod = $reflection->getMethod('storeUserList');
+            $storeMethod->setAccessible(true);
+            $hasChangedMethod = $reflection->getMethod('hasUsersChanged');
+            $hasChangedMethod->setAccessible(true);
+
+            $testUsers = ['/home/testuser'];
+            $cacheKey = 'new_users_'.md5(implode('|', $testUsers));
+
+            // First check should indicate change (no cache exists)
+            $hasChanged = $hasChangedMethod->invoke($service, $cacheKey, $testUsers);
+            expect($hasChanged)->toBeTrue();
+
+            // Store the users in cache
+            $storeMethod->invoke($service, $cacheKey, $testUsers);
+
+            // Second check should indicate no change (cache exists and within cooldown)
+            $hasChangedAgain = $hasChangedMethod->invoke($service, $cacheKey, $testUsers);
+            expect($hasChangedAgain)->toBeFalse();
+        });
+
+        it('respects alert cooldown configuration and re-alerts after cooldown period', function () {
+            $service = new SecurityScannerService();
+
+            // Clear cache
+            $cacheDir = function_exists('storage_path')
+                ? storage_path('security_cache')
+                : sys_get_temp_dir().'/laravel_server_monitor_cache';
+
+            if (is_dir($cacheDir)) {
+                $files = glob($cacheDir.'/new_users_*.json');
+                foreach ($files as $file) {
+                    if (file_exists($file)) {
+                        unlink($file);
+                    }
+                }
+            }
+
+            // Set a very short cooldown for testing (1 minute)
+            config(['server-monitor.security.alert_cooldown' => 1]);
+
+            // Test cooldown behavior with private methods
+            $reflection = new ReflectionClass($service);
+            $storeMethod = $reflection->getMethod('storeUserList');
+            $storeMethod->setAccessible(true);
+            $hasChangedMethod = $reflection->getMethod('hasUsersChanged');
+            $hasChangedMethod->setAccessible(true);
+
+            $testUsers = ['/home/testuser2'];
+            $cacheKey = 'new_users_'.md5(implode('|', $testUsers));
+
+            // Store users in cache
+            $storeMethod->invoke($service, $cacheKey, $testUsers);
+
+            // Should not trigger change (within cooldown)
+            $hasChangedWithinCooldown = $hasChangedMethod->invoke($service, $cacheKey, $testUsers);
+            expect($hasChangedWithinCooldown)->toBeFalse();
+
+            // Manually modify cache timestamp to simulate cooldown expiration
+            $cacheFile = $cacheDir.'/'.$cacheKey.'.json';
+            if (file_exists($cacheFile)) {
+                $cacheData = json_decode(file_get_contents($cacheFile), true);
+                $cacheData['timestamp'] = time() - (2 * 60); // 2 minutes ago
+                file_put_contents($cacheFile, json_encode($cacheData, JSON_PRETTY_PRINT));
+            }
+
+            // After cooldown, should trigger change again
+            $hasChangedAfterCooldown = $hasChangedMethod->invoke($service, $cacheKey, $testUsers);
+            expect($hasChangedAfterCooldown)->toBeTrue();
+        });
+
+        it('stores and retrieves user cache correctly', function () {
+            $service = new SecurityScannerService();
+            $reflection = new ReflectionClass($service);
+
+            // Test private methods using reflection
+            $storeMethod = $reflection->getMethod('storeUserList');
+            $storeMethod->setAccessible(true);
+
+            $hasChangedMethod = $reflection->getMethod('hasUsersChanged');
+            $hasChangedMethod->setAccessible(true);
+
+            $testUsers = ['/home/testuser1', '/home/testuser2'];
+            $cacheKey = 'test_users_'.md5(implode('|', $testUsers));
+
+            // Store user list
+            $storeMethod->invoke($service, $cacheKey, $testUsers);
+
+            // Check that the same users don't trigger a change
+            $hasChanged = $hasChangedMethod->invoke($service, $cacheKey, $testUsers);
+            expect($hasChanged)->toBeFalse();
+
+            // Check that different users do trigger a change
+            $differentUsers = ['/home/testuser3'];
+            $hasChangedDifferent = $hasChangedMethod->invoke($service, $cacheKey, $differentUsers);
+            expect($hasChangedDifferent)->toBeTrue();
+        });
     });
 
     describe('system file modification detection', function () {

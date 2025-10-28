@@ -112,10 +112,16 @@ class SecurityScannerService
             });
 
             if (! empty($filteredUsers)) {
-                return [
-                    'type' => 'Recently Created Users',
-                    'details' => implode("\n", $filteredUsers),
-                ];
+                $cacheKey = 'new_users_'.md5(implode('|', $filteredUsers));
+
+                if ($this->hasUsersChanged($cacheKey, $filteredUsers)) {
+                    $this->storeUserList($cacheKey, $filteredUsers);
+
+                    return [
+                        'type' => 'Recently Created Users',
+                        'details' => implode("\n", $filteredUsers),
+                    ];
+                }
             }
         }
 
@@ -326,5 +332,51 @@ class SecurityScannerService
     private function getCacheFilePath(string $filename): string
     {
         return $this->getCacheDir().'/'.$filename;
+    }
+
+    private function hasUsersChanged(string $cacheKey, array $currentUsers): bool
+    {
+        $cacheFile = $this->getCacheFilePath($cacheKey.'.json');
+
+        if (! file_exists($cacheFile)) {
+            return true;
+        }
+
+        $cachedData = json_decode(file_get_contents($cacheFile), true);
+
+        if (! $cachedData || ! isset($cachedData['users'])) {
+            return true;
+        }
+
+        sort($currentUsers);
+        $cachedUsers = $cachedData['users'];
+        sort($cachedUsers);
+
+        // If users are different, always alert
+        if ($currentUsers !== $cachedUsers) {
+            return true;
+        }
+
+        // If users are the same, check cooldown
+        $alertCooldown = config('server-monitor.security.alert_cooldown', 120);
+        $cacheAge = time() - $cachedData['timestamp'];
+
+        return $cacheAge >= ($alertCooldown * 60);
+    }
+
+    private function storeUserList(string $cacheKey, array $users): void
+    {
+        $cacheDir = $this->getCacheDir();
+
+        if (! is_dir($cacheDir)) {
+            mkdir($cacheDir, 0755, true);
+        }
+
+        $data = [
+            'timestamp' => time(),
+            'users' => $users,
+        ];
+
+        file_put_contents($this->getCacheFilePath($cacheKey.'.json'), json_encode($data, JSON_PRETTY_PRINT));
     }
 }
