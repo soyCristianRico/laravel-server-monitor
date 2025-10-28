@@ -336,30 +336,52 @@ class SecurityScannerService
 
     private function hasUsersChanged(string $cacheKey, array $currentUsers): bool
     {
+        if ($this->isCacheMissing($cacheKey)) {
+            return true;
+        }
+
+        $cachedData = $this->getCachedUserData($cacheKey);
+
+        if ($this->isCacheDataInvalid($cachedData)) {
+            return true;
+        }
+
+        if ($this->areUsersDifferent($currentUsers, $cachedData['users'])) {
+            return true;
+        }
+
+        return $this->isCooldownExpired($cachedData['timestamp']);
+    }
+
+    private function isCacheMissing(string $cacheKey): bool
+    {
+        return ! file_exists($this->getCacheFilePath($cacheKey.'.json'));
+    }
+
+    private function getCachedUserData(string $cacheKey): ?array
+    {
         $cacheFile = $this->getCacheFilePath($cacheKey.'.json');
 
-        if (! file_exists($cacheFile)) {
-            return true;
-        }
+        return json_decode(file_get_contents($cacheFile), true);
+    }
 
-        $cachedData = json_decode(file_get_contents($cacheFile), true);
+    private function isCacheDataInvalid(?array $cachedData): bool
+    {
+        return ! $cachedData || ! isset($cachedData['users']);
+    }
 
-        if (! $cachedData || ! isset($cachedData['users'])) {
-            return true;
-        }
-
+    private function areUsersDifferent(array $currentUsers, array $cachedUsers): bool
+    {
         sort($currentUsers);
-        $cachedUsers = $cachedData['users'];
         sort($cachedUsers);
 
-        // If users are different, always alert
-        if ($currentUsers !== $cachedUsers) {
-            return true;
-        }
+        return $currentUsers !== $cachedUsers;
+    }
 
-        // If users are the same, check cooldown
+    private function isCooldownExpired(int $cacheTimestamp): bool
+    {
         $alertCooldown = config('server-monitor.security.alert_cooldown', 120);
-        $cacheAge = time() - $cachedData['timestamp'];
+        $cacheAge = time() - $cacheTimestamp;
 
         return $cacheAge >= ($alertCooldown * 60);
     }
