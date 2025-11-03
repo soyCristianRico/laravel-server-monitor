@@ -96,14 +96,16 @@ class ServerMonitoringService
 
     public function checkSwapUsage(): array
     {
-        $usage = $this->getSwapUsage();
+        $swapData = $this->getSwapData();
+        $status = $this->getSwapStatus($swapData);
 
         return [
             'metric' => 'swap_usage',
-            'value' => $usage,
+            'value' => $swapData['swap_percentage'],
             'unit' => '%',
-            'status' => $this->getSwapStatus($usage),
-            'message' => "Swap usage is {$usage}%",
+            'status' => $status,
+            'message' => $this->getSwapMessage($swapData, $status),
+            'details' => $swapData,
         ];
     }
 
@@ -185,11 +187,70 @@ class ServerMonitoringService
         return (float) trim($output);
     }
 
+    protected function getSwapData(): array
+    {
+        $output = shell_exec('free -b');
+
+        if (empty($output)) {
+            return [
+                'swap_percentage' => 0,
+                'swap_used_mb' => 0,
+                'swap_total_mb' => 0,
+                'memory_available_mb' => 0,
+                'memory_total_mb' => 0,
+                'memory_pressure' => false,
+            ];
+        }
+
+        $lines = explode("\n", trim($output));
+        $memoryLine = null;
+        $swapLine = null;
+
+        foreach ($lines as $line) {
+            if (strpos($line, 'Mem:') === 0) {
+                $memoryLine = preg_split('/\s+/', $line);
+            } elseif (strpos($line, 'Swap:') === 0) {
+                $swapLine = preg_split('/\s+/', $line);
+            }
+        }
+
+        if (!$memoryLine || !$swapLine) {
+            return [
+                'swap_percentage' => 0,
+                'swap_used_mb' => 0,
+                'swap_total_mb' => 0,
+                'memory_available_mb' => 0,
+                'memory_total_mb' => 0,
+                'memory_pressure' => false,
+            ];
+        }
+
+        $memoryTotal = (int) $memoryLine[1];
+        $memoryAvailable = (int) $memoryLine[6]; // Available column
+        $swapTotal = (int) $swapLine[1];
+        $swapUsed = (int) $swapLine[2];
+
+        $swapPercentage = $swapTotal > 0 ? round(($swapUsed / $swapTotal) * 100) : 0;
+        $memoryAvailablePercentage = $memoryTotal > 0 ? round(($memoryAvailable / $memoryTotal) * 100) : 0;
+
+        // Consider memory pressure if less than 15% available RAM
+        $memoryPressure = $memoryAvailablePercentage < 15;
+
+        return [
+            'swap_percentage' => $swapPercentage,
+            'swap_used_mb' => round($swapUsed / 1024 / 1024, 1),
+            'swap_total_mb' => round($swapTotal / 1024 / 1024, 1),
+            'memory_available_mb' => round($memoryAvailable / 1024 / 1024, 1),
+            'memory_total_mb' => round($memoryTotal / 1024 / 1024, 1),
+            'memory_available_percentage' => $memoryAvailablePercentage,
+            'memory_pressure' => $memoryPressure,
+        ];
+    }
+
     protected function getSwapUsage(): int
     {
-        $output = shell_exec('free | grep Swap | awk "{ if(\$2 == 0) print 0; else printf(\"%.0f\", \$3/\$2 * 100.0) }"');
-
-        return (int) trim($output);
+        $swapData = $this->getSwapData();
+        return $swapData['swap_percentage'];
     }
 
     protected function getMysqlStatus(): bool
@@ -235,15 +296,59 @@ class ServerMonitoringService
         return 'ok';
     }
 
-    protected function getSwapStatus(int $usage): string
+    protected function getSwapStatus(array $swapData): string
     {
-        if ($usage >= $this->getSwapCriticalThreshold()) {
+        $swapPercentage = $swapData['swap_percentage'];
+        $memoryPressure = $swapData['memory_pressure'];
+        $memoryAvailablePercentage = $swapData['memory_available_percentage'];
+
+        // No swap configured or no swap used
+        if ($swapData['swap_total_mb'] == 0 || $swapPercentage == 0) {
+            return 'ok';
+        }
+
+        // Critical: High swap usage AND memory pressure (low available RAM)
+        if ($swapPercentage >= $this->getSwapCriticalThreshold() && $memoryPressure) {
             return 'critical';
         }
-        if ($usage >= $this->getSwapWarningThreshold()) {
+
+        // Critical: Extremely high swap usage (>80%) regardless of available RAM
+        if ($swapPercentage >= 80) {
+            return 'critical';
+        }
+
+        // Warning: Moderate swap usage WITH memory pressure
+        if ($swapPercentage >= $this->getSwapWarningThreshold() && $memoryPressure) {
             return 'warning';
         }
 
+        // Warning: Very high swap usage (>60%) even without memory pressure
+        if ($swapPercentage >= 60) {
+            return 'warning';
+        }
+
+        // Normal: Swap usage without memory pressure is optimization, not a problem
         return 'ok';
+    }
+
+    protected function getSwapMessage(array $swapData, string $status): string
+    {
+        $swapPercentage = $swapData['swap_percentage'];
+        $swapUsedMb = $swapData['swap_used_mb'];
+        $memoryAvailableMb = $swapData['memory_available_mb'];
+        $memoryAvailablePercentage = $swapData['memory_available_percentage'];
+
+        if ($status === 'ok') {
+            if ($swapPercentage > 0) {
+                return "Swap usage {$swapPercentage}% ({$swapUsedMb}MB) is normal with {$memoryAvailableMb}MB ({$memoryAvailablePercentage}%) RAM available";
+            }
+            return "No swap usage detected";
+        }
+
+        if ($status === 'warning') {
+            return "Swap usage {$swapPercentage}% ({$swapUsedMb}MB) with {$memoryAvailableMb}MB ({$memoryAvailablePercentage}%) RAM available";
+        }
+
+        return "High swap usage {$swapPercentage}% ({$swapUsedMb}MB) with low available RAM {$memoryAvailableMb}MB ({$memoryAvailablePercentage}%)";
     }
 }

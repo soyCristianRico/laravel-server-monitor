@@ -167,28 +167,70 @@ describe('ServerMonitoringService', function () {
     });
 
     describe('swap usage monitoring', function () {
-        it('returns ok status when swap usage is below warning threshold', function () {
+        it('returns ok status when swap usage is low with plenty of available RAM', function () {
             $service = Mockery::mock(ServerMonitoringService::class)->makePartial()
                 ->shouldAllowMockingProtectedMethods();
-            $service->shouldReceive('getSwapUsage')->andReturn(10);
+
+            $swapData = [
+                'swap_percentage' => 10,
+                'swap_used_mb' => 100.0,
+                'swap_total_mb' => 1000.0,
+                'memory_available_mb' => 4000.0,
+                'memory_total_mb' => 8000.0,
+                'memory_available_percentage' => 50,
+                'memory_pressure' => false,
+            ];
+
+            $service->shouldReceive('getSwapData')->andReturn($swapData);
             $service->shouldReceive('getSwapWarningThreshold')->andReturn(20);
             $service->shouldReceive('getSwapCriticalThreshold')->andReturn(50);
 
             $result = $service->checkSwapUsage();
 
-            expect($result)->toMatchArray([
-                'metric' => 'swap_usage',
-                'value' => 10,
-                'unit' => '%',
-                'status' => 'ok',
-                'message' => 'Swap usage is 10%'
-            ]);
+            expect($result['metric'])->toBe('swap_usage');
+            expect($result['value'])->toBe(10);
+            expect($result['unit'])->toBe('%');
+            expect($result['status'])->toBe('ok');
+            expect($result['message'])->toContain('is normal with');
         });
 
-        it('returns warning status when swap usage exceeds warning threshold', function () {
+        it('returns ok status when no swap is configured', function () {
             $service = Mockery::mock(ServerMonitoringService::class)->makePartial()
                 ->shouldAllowMockingProtectedMethods();
-            $service->shouldReceive('getSwapUsage')->andReturn(30);
+
+            $swapData = [
+                'swap_percentage' => 0,
+                'swap_used_mb' => 0.0,
+                'swap_total_mb' => 0.0,
+                'memory_available_mb' => 4000.0,
+                'memory_total_mb' => 8000.0,
+                'memory_available_percentage' => 50,
+                'memory_pressure' => false,
+            ];
+
+            $service->shouldReceive('getSwapData')->andReturn($swapData);
+
+            $result = $service->checkSwapUsage();
+
+            expect($result['status'])->toBe('ok');
+            expect($result['value'])->toBe(0);
+        });
+
+        it('returns warning status when swap usage is moderate WITH memory pressure', function () {
+            $service = Mockery::mock(ServerMonitoringService::class)->makePartial()
+                ->shouldAllowMockingProtectedMethods();
+
+            $swapData = [
+                'swap_percentage' => 30,
+                'swap_used_mb' => 300.0,
+                'swap_total_mb' => 1000.0,
+                'memory_available_mb' => 800.0,  // Low available memory
+                'memory_total_mb' => 8000.0,
+                'memory_available_percentage' => 10,  // < 15%
+                'memory_pressure' => true,
+            ];
+
+            $service->shouldReceive('getSwapData')->andReturn($swapData);
             $service->shouldReceive('getSwapWarningThreshold')->andReturn(20);
             $service->shouldReceive('getSwapCriticalThreshold')->andReturn(50);
 
@@ -198,10 +240,45 @@ describe('ServerMonitoringService', function () {
             expect($result['value'])->toBe(30);
         });
 
-        it('returns critical status when swap usage exceeds critical threshold', function () {
+        it('returns warning status when swap usage exceeds 60% regardless of memory pressure', function () {
             $service = Mockery::mock(ServerMonitoringService::class)->makePartial()
                 ->shouldAllowMockingProtectedMethods();
-            $service->shouldReceive('getSwapUsage')->andReturn(60);
+
+            $swapData = [
+                'swap_percentage' => 65,
+                'swap_used_mb' => 650.0,
+                'swap_total_mb' => 1000.0,
+                'memory_available_mb' => 4000.0,  // Plenty of memory
+                'memory_total_mb' => 8000.0,
+                'memory_available_percentage' => 50,
+                'memory_pressure' => false,
+            ];
+
+            $service->shouldReceive('getSwapData')->andReturn($swapData);
+            $service->shouldReceive('getSwapWarningThreshold')->andReturn(20);
+            $service->shouldReceive('getSwapCriticalThreshold')->andReturn(50);
+
+            $result = $service->checkSwapUsage();
+
+            expect($result['status'])->toBe('warning');
+            expect($result['value'])->toBe(65);
+        });
+
+        it('returns critical status when swap usage is high WITH memory pressure', function () {
+            $service = Mockery::mock(ServerMonitoringService::class)->makePartial()
+                ->shouldAllowMockingProtectedMethods();
+
+            $swapData = [
+                'swap_percentage' => 60,
+                'swap_used_mb' => 600.0,
+                'swap_total_mb' => 1000.0,
+                'memory_available_mb' => 500.0,  // Low available memory
+                'memory_total_mb' => 8000.0,
+                'memory_available_percentage' => 6,  // < 15%
+                'memory_pressure' => true,
+            ];
+
+            $service->shouldReceive('getSwapData')->andReturn($swapData);
             $service->shouldReceive('getSwapWarningThreshold')->andReturn(20);
             $service->shouldReceive('getSwapCriticalThreshold')->andReturn(50);
 
@@ -211,17 +288,53 @@ describe('ServerMonitoringService', function () {
             expect($result['value'])->toBe(60);
         });
 
-        it('returns ok status when no swap is configured', function () {
+        it('returns critical status when swap usage exceeds 80% regardless of memory pressure', function () {
             $service = Mockery::mock(ServerMonitoringService::class)->makePartial()
                 ->shouldAllowMockingProtectedMethods();
-            $service->shouldReceive('getSwapUsage')->andReturn(0);
+
+            $swapData = [
+                'swap_percentage' => 85,
+                'swap_used_mb' => 850.0,
+                'swap_total_mb' => 1000.0,
+                'memory_available_mb' => 4000.0,  // Plenty of memory
+                'memory_total_mb' => 8000.0,
+                'memory_available_percentage' => 50,
+                'memory_pressure' => false,
+            ];
+
+            $service->shouldReceive('getSwapData')->andReturn($swapData);
+            $service->shouldReceive('getSwapWarningThreshold')->andReturn(20);
+            $service->shouldReceive('getSwapCriticalThreshold')->andReturn(50);
+
+            $result = $service->checkSwapUsage();
+
+            expect($result['status'])->toBe('critical');
+            expect($result['value'])->toBe(85);
+        });
+
+        it('returns ok status when swap usage is moderate WITHOUT memory pressure (normal optimization)', function () {
+            $service = Mockery::mock(ServerMonitoringService::class)->makePartial()
+                ->shouldAllowMockingProtectedMethods();
+
+            $swapData = [
+                'swap_percentage' => 25,  // Above threshold but no memory pressure
+                'swap_used_mb' => 250.0,
+                'swap_total_mb' => 1000.0,
+                'memory_available_mb' => 5000.0,  // Plenty of memory
+                'memory_total_mb' => 8000.0,
+                'memory_available_percentage' => 62,  // > 15%
+                'memory_pressure' => false,
+            ];
+
+            $service->shouldReceive('getSwapData')->andReturn($swapData);
             $service->shouldReceive('getSwapWarningThreshold')->andReturn(20);
             $service->shouldReceive('getSwapCriticalThreshold')->andReturn(50);
 
             $result = $service->checkSwapUsage();
 
             expect($result['status'])->toBe('ok');
-            expect($result['value'])->toBe(0);
+            expect($result['value'])->toBe(25);
+            expect($result['message'])->toContain('is normal with');
         });
     });
 

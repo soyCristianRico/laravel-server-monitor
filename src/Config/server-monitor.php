@@ -48,8 +48,16 @@ return [
         | Swap Usage Monitoring
         |--------------------------------------------------------------------------
         |
-        | Swap usage thresholds as percentages (0-100).
-        | Any swap usage indicates memory pressure and potential performance issues.
+        | Smart swap monitoring that considers both swap percentage and available RAM.
+        |
+        | The system uses intelligent logic to avoid false positives:
+        | - Normal swap usage (0-60%) with plenty of available RAM is considered OK
+        | - Only alerts when swap usage indicates real memory pressure
+        | - Memory pressure is detected when less than 15% RAM is available
+        |
+        | Thresholds work as follows:
+        | - WARNING: threshold% swap usage WITH memory pressure, OR >60% swap usage
+        | - CRITICAL: threshold% swap usage WITH memory pressure, OR >80% swap usage
         |
         */
         'swap' => [
