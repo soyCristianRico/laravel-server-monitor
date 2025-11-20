@@ -19,7 +19,7 @@ class SecurityMonitorCrontabsCommand extends Command
         $this->initializeNotificationService();
         $scanner = app(SecurityScannerService::class);
 
-        logger()->debug('Monitoring crontab modifications...');
+        $this->info('Monitoring crontab modifications...');
 
         $alerts = [];
 
@@ -38,7 +38,7 @@ class SecurityMonitorCrontabsCommand extends Command
             return 1;
         }
 
-        logger()->debug('✅ No recent crontab modifications detected');
+        $this->info('✅ No recent crontab modifications detected');
 
         return 0;
     }
