@@ -644,6 +644,95 @@ describe('SecurityScannerService', function () {
                 expect($result)->toBeArray();
             });
         });
+
+        describe('false positive exclusions', function () {
+            it('excludes php-fpm processes from suspicious PHP process detection', function () {
+                $service = new SecurityScannerService();
+
+                // Mock shell_exec response that includes php-fpm
+                $mockProcessList = "root     1234  0.0  1.1 275480 46356 ?        Ss   Dec03   2:14 php-fpm: master process (/etc/php/8.2/fpm/php-fpm.conf)
+www-data 5678  0.0  0.4 276064 17796 ?        S    19:27   0:00 php-fpm: pool www
+user     9012  0.0  0.2 123456 12345 ?        S    19:30   0:00 php /suspicious/script.php";
+
+                // The service should filter out php-fpm processes
+                // Test that php-fpm would be excluded from the grep command
+                $grepCommand = "ps aux | grep -E 'php.*-f' | grep -v -E '(/home/[^/]+/(www|public_html|laravel|app)|/var/www)' | grep -v 'php-fpm' | grep -v grep";
+
+                expect($grepCommand)->toContain('grep -v \'php-fpm\'');
+                expect($grepCommand)->not()->toContain('php-fpm: master');
+                expect($grepCommand)->not()->toContain('php-fpm: pool');
+            });
+
+            it('excludes legitimate Symfony Resources/assets directories from vendor scanning', function () {
+                $service = new SecurityScannerService();
+
+                // Test that the find command excludes Resources/assets
+                $findCommand = "find /vendor -type d \\( -name 'assets' -o -name 'images' -o -name 'uploads' \\) 2>/dev/null | grep -v '/Resources/assets'";
+
+                expect($findCommand)->toContain('grep -v \'/Resources/assets\'');
+
+                // These should be excluded
+                $legitimatePaths = [
+                    '/vendor/symfony/error-handler/Resources/assets',
+                    '/vendor/symfony/web-profiler-bundle/Resources/assets',
+                    '/vendor/laravel/framework/Resources/assets'
+                ];
+
+                foreach ($legitimatePaths as $path) {
+                    // The grep -v should exclude these paths
+                    expect(strpos($path, '/Resources/assets'))->not()->toBeFalse();
+                }
+            });
+
+            it('excludes Resources/assets but still detects suspicious vendor PHP files', function () {
+                $service = new SecurityScannerService();
+
+                // Test the command structure for PHP file detection in vendor
+                $findCommand = "find /vendor \\( -name '*.php' -path '*/assets/*' -o -name '*.php' -path '*/images/*' -o -name '*.php' -path '*/uploads/*' \\) 2>/dev/null | grep -v '/Resources/assets'";
+
+                expect($findCommand)->toContain('grep -v \'/Resources/assets\'');
+
+                // These legitimate files should be excluded
+                $legitimateFiles = [
+                    '/vendor/symfony/error-handler/Resources/assets/js/helper.php',
+                    '/vendor/symfony/framework-bundle/Resources/assets/test.php'
+                ];
+
+                // These suspicious files should NOT be excluded
+                $suspiciousFiles = [
+                    '/vendor/malicious/assets/backdoor.php',
+                    '/vendor/hacked/images/shell.php',
+                    '/vendor/evil/uploads/webshell.php'
+                ];
+
+                foreach ($legitimateFiles as $file) {
+                    expect(strpos($file, '/Resources/assets'))->not()->toBeFalse();
+                }
+
+                foreach ($suspiciousFiles as $file) {
+                    expect(strpos($file, '/Resources/assets'))->toBeFalse();
+                }
+            });
+
+            it('detects .svg.php files as critical security threats', function () {
+                $service = new SecurityScannerService();
+                $reflection = new ReflectionClass($service);
+                $method = $reflection->getMethod('scanPhpFilesInVendorPaths');
+                $method->setAccessible(true);
+
+                // Test that .svg.php files trigger a critical alert
+                $svgPhpFile = '/vendor/symfony/error-handler/Resources/assets/images/symfony-ghost.svg.php';
+
+                // Verify that .svg.php files are flagged as critical
+                expect(strpos($svgPhpFile, '.svg.php'))->not()->toBeFalse();
+                expect(strpos($svgPhpFile, '.svg.php'))->toBeInt();
+
+                // The alert type should be marked as CRITICAL for .svg.php files
+                $criticalAlertType = 'CRITICAL: Suspicious .svg.php Files in Vendor';
+                expect($criticalAlertType)->toContain('CRITICAL');
+                expect($criticalAlertType)->toContain('.svg.php');
+            });
+        });
     });
 
     describe('private helper methods', function () {

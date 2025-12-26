@@ -179,6 +179,38 @@ return [
 
         /*
         |--------------------------------------------------------------------------
+        | Whitelisted Processes
+        |--------------------------------------------------------------------------
+        |
+        | Process names that should be ignored during security scans.
+        | These are legitimate system processes.
+        |
+        */
+        'whitelisted_processes' => [
+            'php-fpm',
+            'php-fpm: master',
+            'php-fpm: pool',
+        ],
+
+        /*
+        |--------------------------------------------------------------------------
+        | Excluded Vendor Paths
+        |--------------------------------------------------------------------------
+        |
+        | Vendor directory patterns that are legitimate and should not trigger alerts.
+        | These are common in framework packages.
+        |
+        */
+        'excluded_vendor_patterns' => [
+            '/Resources/assets',
+            '/Resources/views',
+            '/Resources/lang',
+            '/tests/fixtures',
+            '/tests/stubs',
+        ],
+
+        /*
+        |--------------------------------------------------------------------------
         | Enhanced Security Detection Options
         |--------------------------------------------------------------------------
         |

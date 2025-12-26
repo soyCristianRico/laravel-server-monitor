@@ -60,7 +60,7 @@ class SecurityScannerService
 
     private function checkPhpProcessesOutsideWebDirectories(): array
     {
-        $outsidePhpProcesses = shell_exec("ps aux | grep -E 'php.*-f' | grep -v -E '(/home/[^/]+/(www|public_html|laravel|app)|/var/www)' | grep -v grep");
+        $outsidePhpProcesses = shell_exec("ps aux | grep -E 'php.*-f' | grep -v -E '(/home/[^/]+/(www|public_html|laravel|app)|/var/www)' | grep -v 'php-fpm' | grep -v grep");
 
         if (empty(trim($outsidePhpProcesses))) {
             return [];
@@ -430,7 +430,8 @@ class SecurityScannerService
     private function scanSuspiciousVendorDirectories(): array
     {
         $basePath = base_path();
-        $suspiciousVendorDirs = shell_exec("find {$basePath}/vendor -type d -name 'assets' -o -name 'images' -o -name 'uploads' 2>/dev/null");
+        // Find directories but exclude legitimate Symfony Resources/assets paths
+        $suspiciousVendorDirs = shell_exec("find {$basePath}/vendor -type d \\( -name 'assets' -o -name 'images' -o -name 'uploads' \\) 2>/dev/null | grep -v '/Resources/assets'");
 
         if (empty(trim($suspiciousVendorDirs))) {
             return [];
@@ -445,10 +446,27 @@ class SecurityScannerService
     private function scanPhpFilesInVendorPaths(): array
     {
         $basePath = base_path();
-        $suspiciousVendorPhp = shell_exec("find {$basePath}/vendor -name '*.php' -path '*/assets/*' -o -name '*.php' -path '*/images/*' -o -name '*.php' -path '*/uploads/*' 2>/dev/null");
+        // Look for PHP files in suspicious vendor paths but exclude legitimate Symfony Resources
+        $suspiciousVendorPhp = shell_exec("find {$basePath}/vendor \\( -name '*.php' -path '*/assets/*' -o -name '*.php' -path '*/images/*' -o -name '*.php' -path '*/uploads/*' \\) 2>/dev/null | grep -v '/Resources/assets'");
 
         if (empty(trim($suspiciousVendorPhp))) {
             return [];
+        }
+
+        // Special check for .svg.php files which are highly suspicious
+        $svgPhpFiles = [];
+        $allFiles = explode("\n", trim($suspiciousVendorPhp));
+        foreach ($allFiles as $file) {
+            if (strpos($file, '.svg.php') !== false) {
+                $svgPhpFiles[] = $file;
+            }
+        }
+
+        if (!empty($svgPhpFiles)) {
+            return [[
+                'type' => 'CRITICAL: Suspicious .svg.php Files in Vendor',
+                'details' => "Highly suspicious .svg.php files found (possible malware):\n" . implode("\n", $svgPhpFiles),
+            ]];
         }
 
         return [[
