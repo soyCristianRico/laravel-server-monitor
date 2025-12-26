@@ -23,34 +23,53 @@ class SecurityScannerService
     {
         $alerts = [];
 
-        // NEW: Check for PHP processes running from /tmp/
-        $tmpPhpProcesses = shell_exec("ps aux | grep -E 'php.*-f.*/(tmp|var/tmp)/' | grep -v grep");
-        if (! empty(trim($tmpPhpProcesses))) {
-            $alerts[] = [
-                'type' => 'Suspicious PHP Processes in /tmp',
-                'details' => $tmpPhpProcesses,
-            ];
-        }
-
-        // NEW: Check for PHP processes with suspicious file names
-        $suspiciousPhpProcesses = shell_exec("ps aux | grep -E 'php.*-f.*(httpd\.conf|apache\.conf|nginx\.conf|\.cache|\.log)' | grep -v grep");
-        if (! empty(trim($suspiciousPhpProcesses))) {
-            $alerts[] = [
-                'type' => 'PHP Processes with Suspicious File Names',
-                'details' => $suspiciousPhpProcesses,
-            ];
-        }
-
-        // NEW: Check for PHP processes running outside standard web directories
-        $outsidePhpProcesses = shell_exec("ps aux | grep -E 'php.*-f' | grep -v -E '(/home/[^/]+/(www|public_html|laravel|app)|/var/www)' | grep -v grep");
-        if (! empty(trim($outsidePhpProcesses))) {
-            $alerts[] = [
-                'type' => 'PHP Processes Outside Web Directories',
-                'details' => $outsidePhpProcesses,
-            ];
-        }
+        $alerts = array_merge($alerts, $this->checkPhpProcessesInTempDirectories());
+        $alerts = array_merge($alerts, $this->checkPhpProcessesWithSuspiciousFileNames());
+        $alerts = array_merge($alerts, $this->checkPhpProcessesOutsideWebDirectories());
 
         return empty($alerts) ? null : $alerts;
+    }
+
+    private function checkPhpProcessesInTempDirectories(): array
+    {
+        $tmpPhpProcesses = shell_exec("ps aux | grep -E 'php.*-f.*/(tmp|var/tmp)/' | grep -v grep");
+
+        if (empty(trim($tmpPhpProcesses))) {
+            return [];
+        }
+
+        return [[
+            'type' => 'Suspicious PHP Processes in /tmp',
+            'details' => $tmpPhpProcesses,
+        ]];
+    }
+
+    private function checkPhpProcessesWithSuspiciousFileNames(): array
+    {
+        $suspiciousPhpProcesses = shell_exec("ps aux | grep -E 'php.*-f.*(httpd\.conf|apache\.conf|nginx\.conf|\.cache|\.log)' | grep -v grep");
+
+        if (empty(trim($suspiciousPhpProcesses))) {
+            return [];
+        }
+
+        return [[
+            'type' => 'PHP Processes with Suspicious File Names',
+            'details' => $suspiciousPhpProcesses,
+        ]];
+    }
+
+    private function checkPhpProcessesOutsideWebDirectories(): array
+    {
+        $outsidePhpProcesses = shell_exec("ps aux | grep -E 'php.*-f' | grep -v -E '(/home/[^/]+/(www|public_html|laravel|app)|/var/www)' | grep -v grep");
+
+        if (empty(trim($outsidePhpProcesses))) {
+            return [];
+        }
+
+        return [[
+            'type' => 'PHP Processes Outside Web Directories',
+            'details' => $outsidePhpProcesses,
+        ]];
     }
 
     public function checkSuspiciousPorts(): array
@@ -321,98 +340,161 @@ class SecurityScannerService
     public function checkSuspiciousUploads(): array
     {
         $alerts = [];
-        $basePath = base_path();
 
-        // NEW: Check for PHP files in storage/upload directories
-        $storagePhpFiles = shell_exec("find {$basePath}/storage/app/public -name '*.php' -o -name '*.phtml' -o -name '*.php3' -o -name '*.php4' -o -name '*.php5' 2>/dev/null");
-        if (! empty(trim($storagePhpFiles))) {
-            $alerts[] = [
-                'type' => 'PHP Files in Storage Directory',
-                'details' => "PHP files found in storage/app/public:\n" . $storagePhpFiles,
-            ];
-        }
-
-        // NEW: Check for PHP files in public/uploads and similar directories
-        $publicUploads = shell_exec("find {$basePath}/public -path '*/uploads/*' -name '*.php' -o -path '*/images/*' -name '*.php' -o -path '*/files/*' -name '*.php' 2>/dev/null");
-        if (! empty(trim($publicUploads))) {
-            $alerts[] = [
-                'type' => 'PHP Files in Upload Directories',
-                'details' => "PHP files found in upload directories:\n" . $publicUploads,
-            ];
-        }
-
-        // NEW: Check for suspicious PHP files in public/ (except index.php)
-        $publicPhpFiles = shell_exec("find {$basePath}/public -maxdepth 1 -name '*.php' ! -name 'index.php' 2>/dev/null");
-        if (! empty(trim($publicPhpFiles))) {
-            $alerts[] = [
-                'type' => 'Suspicious PHP Files in Public Root',
-                'details' => "Unexpected PHP files in public/:\n" . $publicPhpFiles,
-            ];
-        }
-
-        // NEW: Check for PHP files with hexadecimal/random names
-        $randomNamedPhp = shell_exec("find {$basePath}/public -name '*.php' | grep -E '/[a-f0-9]{8,}\.php$|/[a-zA-Z0-9]{10,}\.php$' 2>/dev/null");
-        if (! empty(trim($randomNamedPhp))) {
-            $alerts[] = [
-                'type' => 'PHP Files with Random Names',
-                'details' => "PHP files with suspicious random names:\n" . $randomNamedPhp,
-            ];
-        }
-
-        // NEW: Check for suspicious assets/ directories in wrong locations
-        $suspiciousAssets = shell_exec("find {$basePath} -type d -name 'assets' -path '*/config/*' -o -name 'assets' -path '*/app/*' -o -name 'assets' -path '*/routes/*' -o -name 'assets' -path '*/database/*' -o -name 'assets' -path '*/bootstrap/*' 2>/dev/null");
-        if (! empty(trim($suspiciousAssets))) {
-            $alerts[] = [
-                'type' => 'Suspicious Assets Directories',
-                'details' => "Unexpected assets/ directories found:\n" . $suspiciousAssets,
-            ];
-        }
-
-        // NEW: Check for unauthorized vendor/ modifications (directories)
-        $suspiciousVendorDirs = shell_exec("find {$basePath}/vendor -type d -name 'assets' -o -name 'images' -o -name 'uploads' 2>/dev/null");
-        if (! empty(trim($suspiciousVendorDirs))) {
-            $alerts[] = [
-                'type' => 'Suspicious Vendor Directories',
-                'details' => "Unexpected directories in vendor/:\n" . $suspiciousVendorDirs,
-            ];
-        }
-
-        // NEW: Check for PHP files in suspicious vendor/ paths (more specific)
-        $suspiciousVendorPhp = shell_exec("find {$basePath}/vendor -name '*.php' -path '*/assets/*' -o -name '*.php' -path '*/images/*' -o -name '*.php' -path '*/uploads/*' 2>/dev/null");
-        if (! empty(trim($suspiciousVendorPhp))) {
-            $alerts[] = [
-                'type' => 'PHP Files in Suspicious Vendor Paths',
-                'details' => "PHP files in unusual vendor/ locations:\n" . $suspiciousVendorPhp,
-            ];
-        }
+        $alerts = array_merge($alerts, $this->scanPhpFilesInStorageDirectories());
+        $alerts = array_merge($alerts, $this->scanPhpFilesInUploadDirectories());
+        $alerts = array_merge($alerts, $this->scanUnexpectedPhpFilesInPublicRoot());
+        $alerts = array_merge($alerts, $this->scanPhpFilesWithRandomNames());
+        $alerts = array_merge($alerts, $this->scanSuspiciousAssetsDirectories());
+        $alerts = array_merge($alerts, $this->scanSuspiciousVendorDirectories());
+        $alerts = array_merge($alerts, $this->scanPhpFilesInVendorPaths());
 
         return $alerts;
+    }
+
+    private function scanPhpFilesInStorageDirectories(): array
+    {
+        $basePath = base_path();
+        $storagePhpFiles = shell_exec("find {$basePath}/storage/app/public -name '*.php' -o -name '*.phtml' -o -name '*.php3' -o -name '*.php4' -o -name '*.php5' 2>/dev/null");
+
+        if (empty(trim($storagePhpFiles))) {
+            return [];
+        }
+
+        return [[
+            'type' => 'PHP Files in Storage Directory',
+            'details' => "PHP files found in storage/app/public:\n" . $storagePhpFiles,
+        ]];
+    }
+
+    private function scanPhpFilesInUploadDirectories(): array
+    {
+        $basePath = base_path();
+        $publicUploads = shell_exec("find {$basePath}/public -path '*/uploads/*' -name '*.php' -o -path '*/images/*' -name '*.php' -o -path '*/files/*' -name '*.php' 2>/dev/null");
+
+        if (empty(trim($publicUploads))) {
+            return [];
+        }
+
+        return [[
+            'type' => 'PHP Files in Upload Directories',
+            'details' => "PHP files found in upload directories:\n" . $publicUploads,
+        ]];
+    }
+
+    private function scanUnexpectedPhpFilesInPublicRoot(): array
+    {
+        $basePath = base_path();
+        $publicPhpFiles = shell_exec("find {$basePath}/public -maxdepth 1 -name '*.php' ! -name 'index.php' 2>/dev/null");
+
+        if (empty(trim($publicPhpFiles))) {
+            return [];
+        }
+
+        return [[
+            'type' => 'Suspicious PHP Files in Public Root',
+            'details' => "Unexpected PHP files in public/:\n" . $publicPhpFiles,
+        ]];
+    }
+
+    private function scanPhpFilesWithRandomNames(): array
+    {
+        $basePath = base_path();
+        $randomNamedPhp = shell_exec("find {$basePath}/public -name '*.php' | grep -E '/[a-f0-9]{8,}\.php$|/[a-zA-Z0-9]{10,}\.php$' 2>/dev/null");
+
+        if (empty(trim($randomNamedPhp))) {
+            return [];
+        }
+
+        return [[
+            'type' => 'PHP Files with Random Names',
+            'details' => "PHP files with suspicious random names:\n" . $randomNamedPhp,
+        ]];
+    }
+
+    private function scanSuspiciousAssetsDirectories(): array
+    {
+        $basePath = base_path();
+        $suspiciousAssets = shell_exec("find {$basePath} -type d -name 'assets' -path '*/config/*' -o -name 'assets' -path '*/app/*' -o -name 'assets' -path '*/routes/*' -o -name 'assets' -path '*/database/*' -o -name 'assets' -path '*/bootstrap/*' 2>/dev/null");
+
+        if (empty(trim($suspiciousAssets))) {
+            return [];
+        }
+
+        return [[
+            'type' => 'Suspicious Assets Directories',
+            'details' => "Unexpected assets/ directories found:\n" . $suspiciousAssets,
+        ]];
+    }
+
+    private function scanSuspiciousVendorDirectories(): array
+    {
+        $basePath = base_path();
+        $suspiciousVendorDirs = shell_exec("find {$basePath}/vendor -type d -name 'assets' -o -name 'images' -o -name 'uploads' 2>/dev/null");
+
+        if (empty(trim($suspiciousVendorDirs))) {
+            return [];
+        }
+
+        return [[
+            'type' => 'Suspicious Vendor Directories',
+            'details' => "Unexpected directories in vendor/:\n" . $suspiciousVendorDirs,
+        ]];
+    }
+
+    private function scanPhpFilesInVendorPaths(): array
+    {
+        $basePath = base_path();
+        $suspiciousVendorPhp = shell_exec("find {$basePath}/vendor -name '*.php' -path '*/assets/*' -o -name '*.php' -path '*/images/*' -o -name '*.php' -path '*/uploads/*' 2>/dev/null");
+
+        if (empty(trim($suspiciousVendorPhp))) {
+            return [];
+        }
+
+        return [[
+            'type' => 'PHP Files in Suspicious Vendor Paths',
+            'details' => "PHP files in unusual vendor/ locations:\n" . $suspiciousVendorPhp,
+        ]];
     }
 
     public function checkSuspiciousHtaccess(): array
     {
         $alerts = [];
-        $basePath = base_path();
 
-        // NEW: Check for .htaccess files in subdirectories of public/
-        $suspiciousHtaccess = shell_exec("find {$basePath}/public -name '.htaccess' ! -path '{$basePath}/public/.htaccess' 2>/dev/null");
-        if (! empty(trim($suspiciousHtaccess))) {
-            $alerts[] = [
-                'type' => 'Suspicious .htaccess Files',
-                'details' => "Unexpected .htaccess files found:\n" . $suspiciousHtaccess,
-            ];
-        }
-
-        // NEW: Check for .htaccess files outside of public/
-        $outsideHtaccess = shell_exec("find {$basePath} -name '.htaccess' ! -path '{$basePath}/public/*' 2>/dev/null | head -10");
-        if (! empty(trim($outsideHtaccess))) {
-            $alerts[] = [
-                'type' => '.htaccess Files Outside Public',
-                'details' => "Found .htaccess files outside public/:\n" . $outsideHtaccess,
-            ];
-        }
+        $alerts = array_merge($alerts, $this->scanHtaccessFilesInPublicSubdirectories());
+        $alerts = array_merge($alerts, $this->scanHtaccessFilesOutsidePublic());
 
         return $alerts;
+    }
+
+    private function scanHtaccessFilesInPublicSubdirectories(): array
+    {
+        $basePath = base_path();
+        $suspiciousHtaccess = shell_exec("find {$basePath}/public -name '.htaccess' ! -path '{$basePath}/public/.htaccess' 2>/dev/null");
+
+        if (empty(trim($suspiciousHtaccess))) {
+            return [];
+        }
+
+        return [[
+            'type' => 'Suspicious .htaccess Files',
+            'details' => "Unexpected .htaccess files found:\n" . $suspiciousHtaccess,
+        ]];
+    }
+
+    private function scanHtaccessFilesOutsidePublic(): array
+    {
+        $basePath = base_path();
+        $outsideHtaccess = shell_exec("find {$basePath} -name '.htaccess' ! -path '{$basePath}/public/*' 2>/dev/null | head -10");
+
+        if (empty(trim($outsideHtaccess))) {
+            return [];
+        }
+
+        return [[
+            'type' => '.htaccess Files Outside Public',
+            'details' => "Found .htaccess files outside public/:\n" . $outsideHtaccess,
+        ]];
     }
 
     public function checkFakeImageFiles(): array

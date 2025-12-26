@@ -62,11 +62,7 @@ class SecurityComprehensiveCheckCommand extends Command
             $alerts[] = $alert;
         }
 
-        // 8. COMPREHENSIVE DAILY CHECKS
-        // Note: Critical checks (PHP processes, uploads, htaccess, fake images, file integrity)
-        // are now handled by security:check which runs every 15 minutes for faster detection
-
-        // 9. Run other security commands
+        // Run additional security checks
         $this->info('Running additional security checks...');
         $this->call('security:check');
         $this->call('security:check-malware');

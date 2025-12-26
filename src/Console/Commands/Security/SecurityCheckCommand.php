@@ -70,32 +70,12 @@ class SecurityCheckCommand extends Command
             $this->error('Large files detected!');
         }
 
-        // NEW ENHANCED SECURITY CHECKS
         $this->info('Running enhanced security checks...');
 
-        // Check suspicious uploads (PHP files in storage/uploads)
-        if ($uploadAlerts = $this->scanner->checkSuspiciousUploads()) {
-            $alerts = array_merge($alerts, $uploadAlerts);
-            $this->error('Suspicious file uploads detected!');
-        }
-
-        // Check suspicious .htaccess files
-        if ($htaccessAlerts = $this->scanner->checkSuspiciousHtaccess()) {
-            $alerts = array_merge($alerts, $htaccessAlerts);
-            $this->error('Suspicious .htaccess files detected!');
-        }
-
-        // Check fake image files containing PHP
-        if ($fakeImageAlerts = $this->scanner->checkFakeImageFiles()) {
-            $alerts = array_merge($alerts, $fakeImageAlerts);
-            $this->error('Fake image files with PHP code detected!');
-        }
-
-        // Check file integrity of critical Laravel files
-        if ($integrityAlerts = $this->scanner->checkFileIntegrity()) {
-            $alerts = array_merge($alerts, $integrityAlerts);
-            $this->error('Critical file modifications detected!');
-        }
+        $alerts = array_merge($alerts, $this->checkForSuspiciousUploads());
+        $alerts = array_merge($alerts, $this->checkForSuspiciousHtaccessFiles());
+        $alerts = array_merge($alerts, $this->checkForFakeImageFiles());
+        $alerts = array_merge($alerts, $this->checkForFileIntegrityViolations());
 
         if (! empty($alerts)) {
             $this->sendSecurityAlerts($alerts);
@@ -106,5 +86,45 @@ class SecurityCheckCommand extends Command
         $this->info('✅ No security issues detected');
 
         return 0;
+    }
+
+    private function checkForSuspiciousUploads(): array
+    {
+        if ($uploadAlerts = $this->scanner->checkSuspiciousUploads()) {
+            $this->error('Suspicious file uploads detected!');
+            return $uploadAlerts;
+        }
+
+        return [];
+    }
+
+    private function checkForSuspiciousHtaccessFiles(): array
+    {
+        if ($htaccessAlerts = $this->scanner->checkSuspiciousHtaccess()) {
+            $this->error('Suspicious .htaccess files detected!');
+            return $htaccessAlerts;
+        }
+
+        return [];
+    }
+
+    private function checkForFakeImageFiles(): array
+    {
+        if ($fakeImageAlerts = $this->scanner->checkFakeImageFiles()) {
+            $this->error('Fake image files with PHP code detected!');
+            return $fakeImageAlerts;
+        }
+
+        return [];
+    }
+
+    private function checkForFileIntegrityViolations(): array
+    {
+        if ($integrityAlerts = $this->scanner->checkFileIntegrity()) {
+            $this->error('Critical file modifications detected!');
+            return $integrityAlerts;
+        }
+
+        return [];
     }
 }
