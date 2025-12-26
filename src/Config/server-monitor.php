@@ -174,6 +174,91 @@ return [
         'whitelisted_security_files' => [
             // Add your security-related files here
             // Example: 'app/Services/Security/SecurityService.php',
+            'src/Services/Security/SecurityScannerService.php',
+        ],
+
+        /*
+        |--------------------------------------------------------------------------
+        | Enhanced Security Detection Options
+        |--------------------------------------------------------------------------
+        |
+        | Enable/disable specific security detection features.
+        |
+        */
+        'detections' => [
+            'suspicious_processes' => env('SERVER_MONITOR_CHECK_PROCESSES', true),
+            'suspicious_uploads' => env('SERVER_MONITOR_CHECK_UPLOADS', true),
+            'suspicious_htaccess' => env('SERVER_MONITOR_CHECK_HTACCESS', true),
+            'fake_image_files' => env('SERVER_MONITOR_CHECK_FAKE_IMAGES', true),
+            'file_integrity' => env('SERVER_MONITOR_CHECK_INTEGRITY', true),
+            'malware_patterns' => env('SERVER_MONITOR_CHECK_MALWARE', true),
+        ],
+
+        /*
+        |--------------------------------------------------------------------------
+        | Detection Frequency Strategy
+        |--------------------------------------------------------------------------
+        |
+        | How often to run different security checks for optimal threat detection.
+        |
+        | CRITICAL (every 15 min via security:check):
+        | - PHP processes in /tmp/
+        | - PHP files in storage/uploads/
+        | - Suspicious files in public/
+        | - File integrity (index.php, artisan)
+        | - Malicious .htaccess files
+        | - Fake image files with PHP
+        |
+        | IMPORTANT (every 30 min):
+        | - Malware pattern scanning
+        | - Crontab modifications
+        |
+        | ROUTINE (daily):
+        | - Failed login analysis
+        | - Large file detection
+        | - SSH key modifications
+        | - System file changes
+        |
+        */
+        'frequencies' => [
+            'critical_attack_detection' => env('SERVER_MONITOR_FREQ_CRITICAL', 15),   // security:check
+            'malware_patterns' => env('SERVER_MONITOR_FREQ_MALWARE', 30),           // malware:check
+            'crontab_monitoring' => env('SERVER_MONITOR_FREQ_CRONTAB', 5),          // crontab:monitor
+            'comprehensive_scan' => env('SERVER_MONITOR_FREQ_COMPREHENSIVE', 1440), // daily (1440 min)
+        ],
+
+        /*
+        |--------------------------------------------------------------------------
+        | Critical File Monitoring
+        |--------------------------------------------------------------------------
+        |
+        | Laravel files that should be monitored for unauthorized changes.
+        |
+        */
+        'critical_files' => [
+            'public/index.php',
+            'bootstrap/app.php',
+            'artisan',
+            'composer.json',
+            'composer.lock',
+            '.env',
+        ],
+
+        /*
+        |--------------------------------------------------------------------------
+        | Upload Directory Protection
+        |--------------------------------------------------------------------------
+        |
+        | Directories where PHP files should never be allowed.
+        |
+        */
+        'protected_upload_dirs' => [
+            'storage/app/public',
+            'public/uploads',
+            'public/images',
+            'public/files',
+            'public/documents',
+            'public/media',
         ],
 
         /*
@@ -205,11 +290,15 @@ return [
     | Configure how often various monitoring tasks should run.
     | These are suggestions - you can customize in your console routes.
     |
+    | IMPORTANT: security:check now includes critical attack detections
+    | and should run frequently (every 15 minutes) for fast threat response.
+    |
     */
     'scheduling' => [
         'server_monitor' => 'everyTenMinutes',
-        'security_check' => 'everyThirtyMinutes',
-        'malware_check' => 'hourly',
+        'security_check' => 'everyFifteenMinutes',        // CRITICAL: includes upload/process detection
+        'malware_check' => 'everyThirtyMinutes',
         'crontab_monitor' => 'everyFiveMinutes',
+        'comprehensive_check' => 'dailyAt("04:30")',      // Daily summary + non-critical checks
     ],
 ];
