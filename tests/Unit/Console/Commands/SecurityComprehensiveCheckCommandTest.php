@@ -23,6 +23,13 @@ describe('SecurityComprehensiveCheckCommand', function () {
         $mockScanner->shouldReceive('checkCrontabModifications')->andReturn(null)->byDefault();
         $mockScanner->shouldReceive('checkMalwarePatterns')->andReturn([])->byDefault();
 
+        // NEW ENHANCED SECURITY CHECK MOCKS (needed because comprehensive calls security:check)
+        $mockScanner->shouldReceive('checkSuspiciousPhpProcesses')->andReturn(null)->byDefault();
+        $mockScanner->shouldReceive('checkSuspiciousUploads')->andReturn([])->byDefault();
+        $mockScanner->shouldReceive('checkSuspiciousHtaccess')->andReturn([])->byDefault();
+        $mockScanner->shouldReceive('checkFakeImageFiles')->andReturn([])->byDefault();
+        $mockScanner->shouldReceive('checkFileIntegrity')->andReturn([])->byDefault();
+
         app()->instance(SecurityScannerService::class, $mockScanner);
     });
 
@@ -74,6 +81,13 @@ describe('SecurityComprehensiveCheckCommand', function () {
         $mockScanner->shouldReceive('checkCrontabModifications')->andReturn(null);
         $mockScanner->shouldReceive('checkMalwarePatterns')->andReturn([]);
 
+        // NEW ENHANCED SECURITY CHECK MOCKS (needed because comprehensive calls security:check)
+        $mockScanner->shouldReceive('checkSuspiciousPhpProcesses')->andReturn(null);
+        $mockScanner->shouldReceive('checkSuspiciousUploads')->andReturn([]);
+        $mockScanner->shouldReceive('checkSuspiciousHtaccess')->andReturn([]);
+        $mockScanner->shouldReceive('checkFakeImageFiles')->andReturn([]);
+        $mockScanner->shouldReceive('checkFileIntegrity')->andReturn([]);
+
         app()->instance(SecurityScannerService::class, $mockScanner);
 
         $this->artisan('security:comprehensive-check')
@@ -100,5 +114,71 @@ describe('SecurityComprehensiveCheckCommand', function () {
         // The forge user should not trigger alerts when whitelisted
         expect(config('server-monitor.security.whitelisted_users'))->toContain('forge');
         expect(config('server-monitor.security.whitelisted_directories'))->toContain('/home/forge');
+    });
+
+    it('runs enhanced security checks', function () {
+        // Test that the enhanced methods exist and can be called
+        $service = new SecurityScannerService();
+
+        expect(method_exists($service, 'checkSuspiciousUploads'))->toBeTrue();
+        expect(method_exists($service, 'checkSuspiciousHtaccess'))->toBeTrue();
+        expect(method_exists($service, 'checkFakeImageFiles'))->toBeTrue();
+        expect(method_exists($service, 'checkFileIntegrity'))->toBeTrue();
+
+        // Just verify the command runs successfully with the default mocks
+        $this->artisan('security:comprehensive-check')
+            ->assertExitCode(0);
+    });
+
+    it('handles enhanced security alerts correctly', function () {
+        // Override the default mock to test enhanced security checks with alerts
+        $mockScanner = Mockery::mock(SecurityScannerService::class);
+        $mockScanner->shouldReceive('checkModifiedSystemFiles')->andReturn(null);
+        $mockScanner->shouldReceive('checkUnauthorizedSSHKeys')->andReturn(null);
+        $mockScanner->shouldReceive('checkDiskUsage')->andReturn(null);
+        $mockScanner->shouldReceive('checkFailedLogins')->andReturn(null);
+        $mockScanner->shouldReceive('checkNewUsers')->andReturn(null);
+        $mockScanner->shouldReceive('getListeningPorts')->andReturn('');
+        $mockScanner->shouldReceive('checkLargeFiles')->andReturn(null);
+        $mockScanner->shouldReceive('checkSuspiciousProcesses')->andReturn(null);
+        $mockScanner->shouldReceive('checkSuspiciousPorts')->andReturn([]);
+        $mockScanner->shouldReceive('checkCrontabModifications')->andReturn(null);
+        $mockScanner->shouldReceive('checkMalwarePatterns')->andReturn([]);
+
+        // Test enhanced detection with alerts (these will be called by security:check)
+        $mockScanner->shouldReceive('checkSuspiciousPhpProcesses')->andReturn([
+            [
+                'type' => 'Suspicious PHP Processes in /tmp',
+                'details' => 'php -f /tmp/httpd.conf detected'
+            ]
+        ]);
+        $mockScanner->shouldReceive('checkSuspiciousUploads')->andReturn([
+            [
+                'type' => 'PHP Files in Storage Directory',
+                'details' => 'Found malicious.php in storage/app/public'
+            ],
+            [
+                'type' => 'Suspicious PHP Files in Public Root',
+                'details' => 'Found ae5553dcc89d.php in public/'
+            ]
+        ]);
+        $mockScanner->shouldReceive('checkSuspiciousHtaccess')->andReturn([]);
+        $mockScanner->shouldReceive('checkFakeImageFiles')->andReturn([
+            [
+                'type' => 'Fake Image Files Containing PHP',
+                'details' => 'toggige-arrow.jpg contains PHP code'
+            ]
+        ]);
+        $mockScanner->shouldReceive('checkFileIntegrity')->andReturn([
+            [
+                'type' => 'Critical File Modified',
+                'details' => 'public/index.php has been modified'
+            ]
+        ]);
+
+        app()->instance(SecurityScannerService::class, $mockScanner);
+
+        $this->artisan('security:comprehensive-check')
+            ->assertExitCode(0); // Will send alerts but exit successfully
     });
 });
