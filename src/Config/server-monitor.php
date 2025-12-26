@@ -211,6 +211,25 @@ return [
 
         /*
         |--------------------------------------------------------------------------
+        | Whitelisted .htaccess Files
+        |--------------------------------------------------------------------------
+        |
+        | Specific .htaccess file paths that are known to be legitimate.
+        | These are relative to the project root.
+        | Note: .htaccess files in storage/app/public with "Deny from all" are
+        | automatically considered legitimate and don't need to be listed here.
+        |
+        | Add your project-specific .htaccess files here if needed.
+        | Example: 'storage/app/public/.htaccess'
+        |
+        */
+        'whitelisted_htaccess' => [
+            // Add project-specific .htaccess paths here if needed
+            // 'storage/app/public/.htaccess',
+        ],
+
+        /*
+        |--------------------------------------------------------------------------
         | Enhanced Security Detection Options
         |--------------------------------------------------------------------------
         |

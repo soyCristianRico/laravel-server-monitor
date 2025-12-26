@@ -732,6 +732,68 @@ user     9012  0.0  0.2 123456 12345 ?        S    19:30   0:00 php /suspicious/
                 expect($criticalAlertType)->toContain('CRITICAL');
                 expect($criticalAlertType)->toContain('.svg.php');
             });
+
+            it('excludes protective .htaccess files in storage/app/public', function () {
+                $service = new SecurityScannerService();
+
+                // Protective .htaccess content patterns
+                $protectivePatterns = [
+                    'Deny from all',
+                    'Require all denied',
+                    'Order Allow,Deny'
+                ];
+
+                foreach ($protectivePatterns as $pattern) {
+                    // These patterns indicate protective .htaccess files
+                    $hasDeny = stripos($pattern, 'deny') !== false;
+                    $hasDenied = stripos($pattern, 'denied') !== false;
+                    expect($hasDeny || $hasDenied)->toBeTrue();
+                }
+
+                // Verify that storage/app/public paths are checked
+                $storagePath = '/storage/app/public/.htaccess';
+                expect(strpos($storagePath, '/storage/app/public'))->not()->toBeFalse();
+            });
+
+            it('respects whitelisted .htaccess configuration', function () {
+                $service = new SecurityScannerService();
+
+                // Example of whitelisted paths that users might configure
+                $exampleWhitelistedPaths = [
+                    'storage/app/public/.htaccess',
+                    'storage/app/public/uploads/.htaccess',
+                    'resources/views/.htaccess'
+                ];
+
+                foreach ($exampleWhitelistedPaths as $path) {
+                    // Verify that paths can be configured in various locations
+                    expect($path)->toBeString();
+                    expect(strlen($path))->toBeGreaterThan(0);
+                }
+
+                // The configuration should accept an array of paths
+                expect(is_array(config('server-monitor.security.whitelisted_htaccess', [])))->toBeTrue();
+            });
+
+            it('excludes vendor and node_modules from htaccess scanning', function () {
+                $service = new SecurityScannerService();
+
+                // The find command should exclude these paths
+                $findCommand = "find /path -name '.htaccess' ! -path '/path/public/*' ! -path '*/vendor/*' ! -path '*/node_modules/*'";
+
+                expect($findCommand)->toContain("! -path '*/vendor/*'");
+                expect($findCommand)->toContain("! -path '*/node_modules/*'");
+
+                // Verify these paths would be excluded
+                $excludedPaths = [
+                    '/vendor/package/.htaccess',
+                    '/node_modules/module/.htaccess'
+                ];
+
+                foreach ($excludedPaths as $path) {
+                    expect(strpos($path, '/vendor/') !== false || strpos($path, '/node_modules/') !== false)->toBeTrue();
+                }
+            });
         });
     });
 

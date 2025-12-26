@@ -503,15 +503,55 @@ class SecurityScannerService
     private function scanHtaccessFilesOutsidePublic(): array
     {
         $basePath = base_path();
-        $outsideHtaccess = shell_exec("find {$basePath} -name '.htaccess' ! -path '{$basePath}/public/*' 2>/dev/null | head -10");
+        // Find .htaccess files outside public but exclude vendor and node_modules
+        $outsideHtaccess = shell_exec("find {$basePath} -name '.htaccess' ! -path '{$basePath}/public/*' ! -path '*/vendor/*' ! -path '*/node_modules/*' 2>/dev/null | head -20");
 
         if (empty(trim($outsideHtaccess))) {
             return [];
         }
 
+        // Filter out legitimate protective .htaccess files
+        $htaccessFiles = array_filter(explode("\n", trim($outsideHtaccess)));
+        $suspiciousFiles = [];
+
+        foreach ($htaccessFiles as $file) {
+            if (empty($file)) {
+                continue;
+            }
+
+            // Check if this is a protective .htaccess in storage/app/public
+            if (strpos($file, '/storage/app/public') !== false) {
+                // Read the file content to check if it's a protective .htaccess
+                if (file_exists($file)) {
+                    $content = file_get_contents($file);
+                    // If it contains "Deny from all" or "Require all denied", it's protective
+                    if (stripos($content, 'deny from all') !== false ||
+                        stripos($content, 'require all denied') !== false ||
+                        stripos($content, 'order allow,deny') !== false) {
+                        // This is a legitimate protective .htaccess, skip it
+                        continue;
+                    }
+                }
+            }
+
+            // Check against whitelisted .htaccess paths
+            $relativePath = str_replace($basePath . '/', '', $file);
+            $whitelistedPaths = config('server-monitor.security.whitelisted_htaccess', []);
+
+            if (in_array($relativePath, $whitelistedPaths)) {
+                continue;
+            }
+
+            $suspiciousFiles[] = $file;
+        }
+
+        if (empty($suspiciousFiles)) {
+            return [];
+        }
+
         return [[
             'type' => '.htaccess Files Outside Public',
-            'details' => "Found .htaccess files outside public/:\n" . $outsideHtaccess,
+            'details' => "Found potentially suspicious .htaccess files:\n" . implode("\n", $suspiciousFiles),
         ]];
     }
 
