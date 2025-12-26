@@ -6,6 +6,7 @@ class SecurityScannerService
 {
     public function checkSuspiciousProcesses(): ?array
     {
+        // ENHANCED: Check original + new suspicious patterns in ONE check
         $suspiciousProcesses = shell_exec("ps aux | grep -E '(wget|curl).*\.sh' | grep -v grep");
 
         if (! empty(trim($suspiciousProcesses))) {
@@ -16,6 +17,40 @@ class SecurityScannerService
         }
 
         return null;
+    }
+
+    public function checkSuspiciousPhpProcesses(): ?array
+    {
+        $alerts = [];
+
+        // NEW: Check for PHP processes running from /tmp/
+        $tmpPhpProcesses = shell_exec("ps aux | grep -E 'php.*-f.*/(tmp|var/tmp)/' | grep -v grep");
+        if (! empty(trim($tmpPhpProcesses))) {
+            $alerts[] = [
+                'type' => 'Suspicious PHP Processes in /tmp',
+                'details' => $tmpPhpProcesses,
+            ];
+        }
+
+        // NEW: Check for PHP processes with suspicious file names
+        $suspiciousPhpProcesses = shell_exec("ps aux | grep -E 'php.*-f.*(httpd\.conf|apache\.conf|nginx\.conf|\.cache|\.log)' | grep -v grep");
+        if (! empty(trim($suspiciousPhpProcesses))) {
+            $alerts[] = [
+                'type' => 'PHP Processes with Suspicious File Names',
+                'details' => $suspiciousPhpProcesses,
+            ];
+        }
+
+        // NEW: Check for PHP processes running outside standard web directories
+        $outsidePhpProcesses = shell_exec("ps aux | grep -E 'php.*-f' | grep -v -E '(/home/[^/]+/(www|public_html|laravel|app)|/var/www)' | grep -v grep");
+        if (! empty(trim($outsidePhpProcesses))) {
+            $alerts[] = [
+                'type' => 'PHP Processes Outside Web Directories',
+                'details' => $outsidePhpProcesses,
+            ];
+        }
+
+        return empty($alerts) ? null : $alerts;
     }
 
     public function checkSuspiciousPorts(): array
@@ -205,7 +240,37 @@ class SecurityScannerService
                 continue;
             }
 
-            $grepCommand = 'grep -l -E \'(eval\s*\(\s*\$|base64_decode\s*\(\s*\$|\$\w+\s*=\s*base64_decode|shell_exec\s*\(\s*\$|system\s*\(\s*\$|exec\s*\(\s*\$|passthru\s*\(\s*\$|popen\s*\(\s*\$|proc_open\s*\(\s*\$|file_get_contents\s*\(\s*\$|\$_[A-Z]+\s*\[\s*["\'][^"\']*["\'])\' '.implode(' ', array_map('escapeshellarg', $phpFiles)).' 2>/dev/null';
+            // ENHANCED: More comprehensive malware pattern detection
+            $malwarePatterns = [
+                'eval\s*\(\s*base64_decode\s*\(',
+                'eval\s*\(\s*gzinflate\s*\(',
+                'eval\s*\(\s*gzuncompress\s*\(',
+                'eval\s*\(\s*str_rot13\s*\(',
+                'eval\s*\(\s*\$_REQUEST\[',
+                'eval\s*\(\s*\$_POST\[',
+                'eval\s*\(\s*\$_GET\[',
+                'eval\s*\(\s*\$_COOKIE\[',
+                '\$_REQUEST\[["\']id["\']\]',
+                '\$_COOKIE\[["\']d["\']\]',
+                'md5\s*\(\s*\$_COOKIE',
+                'goto\s+[A-Za-z]{10,}',
+                '\\x[0-9a-f]{2}.*\\x[0-9a-f]{2}',
+                '@eval\s*\(',
+                'assert\s*\(\s*base64_decode',
+                'preg_replace\s*\(\s*["\'][^"\']*e["\']',
+                'create_function\s*\(',
+                'file_get_contents\s*\(\s*["\']php://input["\']',
+                'move_uploaded_file.*\.php["\']',
+                'copy\s*\(\s*\$_FILES',
+                'shell_exec\s*\(\s*base64_decode',
+                'system\s*\(\s*base64_decode',
+                'passthru\s*\(\s*base64_decode',
+                'chr\s*\(\s*\d+\s*\)\s*\.\s*chr\s*\(',
+                'function_exists\s*\(\s*["\']eval["\']',
+            ];
+
+            $grepPattern = implode('|', $malwarePatterns);
+            $grepCommand = 'grep -l -E \'(' . $grepPattern . ')\' '.implode(' ', array_map('escapeshellarg', $phpFiles)).' 2>/dev/null';
 
             $suspiciousPatterns = shell_exec($grepCommand);
 
@@ -251,6 +316,190 @@ class SecurityScannerService
         }
 
         return $alerts;
+    }
+
+    public function checkSuspiciousUploads(): array
+    {
+        $alerts = [];
+        $basePath = base_path();
+
+        // NEW: Check for PHP files in storage/upload directories
+        $storagePhpFiles = shell_exec("find {$basePath}/storage/app/public -name '*.php' -o -name '*.phtml' -o -name '*.php3' -o -name '*.php4' -o -name '*.php5' 2>/dev/null");
+        if (! empty(trim($storagePhpFiles))) {
+            $alerts[] = [
+                'type' => 'PHP Files in Storage Directory',
+                'details' => "PHP files found in storage/app/public:\n" . $storagePhpFiles,
+            ];
+        }
+
+        // NEW: Check for PHP files in public/uploads and similar directories
+        $publicUploads = shell_exec("find {$basePath}/public -path '*/uploads/*' -name '*.php' -o -path '*/images/*' -name '*.php' -o -path '*/files/*' -name '*.php' 2>/dev/null");
+        if (! empty(trim($publicUploads))) {
+            $alerts[] = [
+                'type' => 'PHP Files in Upload Directories',
+                'details' => "PHP files found in upload directories:\n" . $publicUploads,
+            ];
+        }
+
+        // NEW: Check for suspicious PHP files in public/ (except index.php)
+        $publicPhpFiles = shell_exec("find {$basePath}/public -maxdepth 1 -name '*.php' ! -name 'index.php' 2>/dev/null");
+        if (! empty(trim($publicPhpFiles))) {
+            $alerts[] = [
+                'type' => 'Suspicious PHP Files in Public Root',
+                'details' => "Unexpected PHP files in public/:\n" . $publicPhpFiles,
+            ];
+        }
+
+        // NEW: Check for PHP files with hexadecimal/random names
+        $randomNamedPhp = shell_exec("find {$basePath}/public -name '*.php' | grep -E '/[a-f0-9]{8,}\.php$|/[a-zA-Z0-9]{10,}\.php$' 2>/dev/null");
+        if (! empty(trim($randomNamedPhp))) {
+            $alerts[] = [
+                'type' => 'PHP Files with Random Names',
+                'details' => "PHP files with suspicious random names:\n" . $randomNamedPhp,
+            ];
+        }
+
+        // NEW: Check for suspicious assets/ directories in wrong locations
+        $suspiciousAssets = shell_exec("find {$basePath} -type d -name 'assets' -path '*/config/*' -o -name 'assets' -path '*/app/*' -o -name 'assets' -path '*/routes/*' -o -name 'assets' -path '*/database/*' -o -name 'assets' -path '*/bootstrap/*' 2>/dev/null");
+        if (! empty(trim($suspiciousAssets))) {
+            $alerts[] = [
+                'type' => 'Suspicious Assets Directories',
+                'details' => "Unexpected assets/ directories found:\n" . $suspiciousAssets,
+            ];
+        }
+
+        // NEW: Check for unauthorized vendor/ modifications (directories)
+        $suspiciousVendorDirs = shell_exec("find {$basePath}/vendor -type d -name 'assets' -o -name 'images' -o -name 'uploads' 2>/dev/null");
+        if (! empty(trim($suspiciousVendorDirs))) {
+            $alerts[] = [
+                'type' => 'Suspicious Vendor Directories',
+                'details' => "Unexpected directories in vendor/:\n" . $suspiciousVendorDirs,
+            ];
+        }
+
+        // NEW: Check for PHP files in suspicious vendor/ paths (more specific)
+        $suspiciousVendorPhp = shell_exec("find {$basePath}/vendor -name '*.php' -path '*/assets/*' -o -name '*.php' -path '*/images/*' -o -name '*.php' -path '*/uploads/*' 2>/dev/null");
+        if (! empty(trim($suspiciousVendorPhp))) {
+            $alerts[] = [
+                'type' => 'PHP Files in Suspicious Vendor Paths',
+                'details' => "PHP files in unusual vendor/ locations:\n" . $suspiciousVendorPhp,
+            ];
+        }
+
+        return $alerts;
+    }
+
+    public function checkSuspiciousHtaccess(): array
+    {
+        $alerts = [];
+        $basePath = base_path();
+
+        // NEW: Check for .htaccess files in subdirectories of public/
+        $suspiciousHtaccess = shell_exec("find {$basePath}/public -name '.htaccess' ! -path '{$basePath}/public/.htaccess' 2>/dev/null");
+        if (! empty(trim($suspiciousHtaccess))) {
+            $alerts[] = [
+                'type' => 'Suspicious .htaccess Files',
+                'details' => "Unexpected .htaccess files found:\n" . $suspiciousHtaccess,
+            ];
+        }
+
+        // NEW: Check for .htaccess files outside of public/
+        $outsideHtaccess = shell_exec("find {$basePath} -name '.htaccess' ! -path '{$basePath}/public/*' 2>/dev/null | head -10");
+        if (! empty(trim($outsideHtaccess))) {
+            $alerts[] = [
+                'type' => '.htaccess Files Outside Public',
+                'details' => "Found .htaccess files outside public/:\n" . $outsideHtaccess,
+            ];
+        }
+
+        return $alerts;
+    }
+
+    public function checkFakeImageFiles(): array
+    {
+        $alerts = [];
+        $basePath = base_path();
+
+        // NEW: Check for image files that are actually PHP/text
+        $fakeImages = shell_exec("find {$basePath}/public {$basePath}/storage/app/public -type f \\( -name '*.jpg' -o -name '*.jpeg' -o -name '*.png' -o -name '*.gif' -o -name '*.webp' \\) -exec file {} \\; 2>/dev/null | grep -E '(PHP script|ASCII text|UTF-8 Unicode text)' | cut -d: -f1");
+
+        if (! empty(trim($fakeImages))) {
+            $fakeImageList = array_filter(explode("\n", trim($fakeImages)));
+
+            // Check if any of these files contain PHP code
+            $phpInFakeImages = [];
+            foreach ($fakeImageList as $file) {
+                $content = file_get_contents($file);
+                if ($content && (strpos($content, '<?php') !== false || strpos($content, '<?=') !== false || preg_match('/eval\s*\(/i', $content))) {
+                    $phpInFakeImages[] = $file;
+                }
+            }
+
+            if (!empty($phpInFakeImages)) {
+                $alerts[] = [
+                    'type' => 'Fake Image Files Containing PHP',
+                    'details' => "Image files that contain PHP code:\n" . implode("\n", $phpInFakeImages),
+                ];
+            }
+        }
+
+        return $alerts;
+    }
+
+    public function checkFileIntegrity(): array
+    {
+        $alerts = [];
+        $basePath = base_path();
+
+        // NEW: Check integrity of critical Laravel files
+        $criticalFiles = [
+            $basePath . '/public/index.php',
+            $basePath . '/bootstrap/app.php',
+            $basePath . '/artisan',
+        ];
+
+        foreach ($criticalFiles as $file) {
+            if (file_exists($file)) {
+                $cacheKey = 'file_integrity_' . md5($file);
+                $currentHash = hash_file('sha256', $file);
+
+                $storedHash = $this->getStoredFileHash($cacheKey);
+
+                if ($storedHash && $storedHash !== $currentHash) {
+                    $alerts[] = [
+                        'type' => 'Critical File Modified',
+                        'details' => "File: $file\nPrevious hash: $storedHash\nCurrent hash: $currentHash",
+                    ];
+                }
+
+                // Store current hash for future comparisons
+                $this->storeFileHash($cacheKey, $currentHash);
+            }
+        }
+
+        return $alerts;
+    }
+
+    private function getStoredFileHash(string $cacheKey): ?string
+    {
+        $cacheFile = $this->getCacheFilePath($cacheKey . '.hash');
+
+        if (file_exists($cacheFile)) {
+            return trim(file_get_contents($cacheFile));
+        }
+
+        return null;
+    }
+
+    private function storeFileHash(string $cacheKey, string $hash): void
+    {
+        $cacheDir = $this->getCacheDir();
+
+        if (! is_dir($cacheDir)) {
+            mkdir($cacheDir, 0755, true);
+        }
+
+        file_put_contents($this->getCacheFilePath($cacheKey . '.hash'), $hash);
     }
 
     public function getListeningPorts(): string
